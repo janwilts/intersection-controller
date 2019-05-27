@@ -1,0 +1,903 @@
+# Blocking groups configuration file
+# ----
+#
+# Format:
+#
+# [[groups]]
+# kind = <string> [foot | cycle | motor_vehicle | vessel]: group kind
+# id = <int> (default = 1) [1..n]: group id
+#
+#   [[groups.blocks]]
+#   kind = <string> [foot | cycle | motor_vehicle | vessel]: group kind
+#   id = <int> (default = 1) [1..n]: component id
+
+# Cycle
+# ----
+
+# Foot - North side
+
+[[groups]]
+kind = "foot"
+id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+[[groups]]
+kind = "foot"
+id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+# Foot - East side
+
+[[groups]]
+kind = "foot"
+id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+[[groups]]
+kind = "foot"
+id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+# Foot - South side
+
+[[groups]]
+kind = "foot"
+id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9
+
+[[groups]]
+kind = "foot"
+id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9
+
+# Foot - West side
+
+[[groups]]
+kind = "foot"
+id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+[[groups]]
+kind = "foot"
+id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+# Cycle
+# ----
+
+# Cycle - North side
+
+[[groups]]
+kind = "cycle"
+id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+# Cycle - East side
+
+[[groups]]
+kind = "cycle"
+id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+# Cycle - South side
+
+[[groups]]
+kind = "cycle"
+id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9
+
+# Cycle - West side
+
+[[groups]]
+kind = "cycle"
+id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+# Motor vehicle
+# ----
+
+# MV - North side
+
+[[groups]]
+kind = "motor_vehicle"
+id = 1
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+[[groups]]
+kind = "motor_vehicle"
+id = 2
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+[[groups]]
+kind = "motor_vehicle"
+id = 3
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+# MV - East side
+
+[[groups]]
+kind = "motor_vehicle"
+id = 4
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+[[groups]]
+kind = "motor_vehicle"
+id = 5
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+[[groups]]
+kind = "motor_vehicle"
+id = 6
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+# MV - South side
+
+[[groups]]
+kind = "motor_vehicle"
+id = 7
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 12
+
+[[groups]]
+kind = "motor_vehicle"
+id = 8
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 10
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 11
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 12
+
+# MV - East side
+
+[[groups]]
+kind = "motor_vehicle"
+id = 9
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+[[groups]]
+kind = "motor_vehicle"
+id = 10
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+[[groups]]
+kind = "motor_vehicle"
+id = 11
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "foot"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 1
+
+  [[groups.blocks]]
+  kind = "cycle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 3
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 4
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 5
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+# MV - Special
+
+[[groups]]
+kind = "motor_vehicle"
+id = 12
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 2
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 6
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 7
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 8
+
+  [[groups.blocks]]
+  kind = "motor_vehicle"
+  id = 9

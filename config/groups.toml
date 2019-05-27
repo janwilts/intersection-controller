@@ -1,0 +1,36 @@
+# Group properties configuration file
+# ----
+#
+# Format:
+#
+# [[groups]]
+# kind = <string> [foot | cycle | motor_vehicle | vessel]: group type
+# min_time = <int> [0..n]: time in ms
+# min_transition_time = <int> [0..n]: time in ms
+# min_evac_time = <int> [0..n]: time in ms
+
+[[groups]]
+kind = "motor_vehicle"
+min_go_time = 7_000
+min_transition_time = 4_000
+min_evac_time = 1_000
+
+[[groups]]
+kind = "cycle"
+min_go_time = 8_000
+min_transition_time = 2_000
+min_evac_time = 1_000
+
+[[groups]]
+kind = "foot"
+min_go_time = 6_000
+min_transition_time = 6_000
+min_evac_time = 1_000
+
+[[groups]]
+kind = "vessel"
+min_go_time = 30_000
+min_transition_time = 10_000
+min_evac_time = 0
+
+# Special cases for vessels

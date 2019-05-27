@@ -1,0 +1,13 @@
+[publisher]
+client_id = "team-4-controller-publisher"
+host = "broker.0f.nl"
+protocol = "tcp"
+qos = 1
+keep_alive = 30_000
+
+[subscriber]
+client_id = "team-4-controller-subscriber"
+host = "broker.0f.nl"
+protocol = "tcp"
+qos = 1
+keep_alive = 30_000

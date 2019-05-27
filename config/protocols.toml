@@ -1,0 +1,16 @@
+# Communication protocols configuration file
+# ----
+#
+# Format:
+#
+# [[protocols]]
+# name = <string>: protcol name
+# port = <int> [1..65535]: protocol port on broker
+
+[[protocols]]
+name = "tcp"
+port = 1883
+
+[[protocols]]
+name = "ssl"
+port = 8883

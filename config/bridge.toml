@@ -1,0 +1,95 @@
+# Bridge definitions configuration file
+# ----
+#
+# Format:
+#
+# [[groups]]
+# kind = <string> [foot | cycle | motor_vehicle | vessel]: group kind
+# id = <int> (default = 1) [1..n]: group id
+# alias = <string> (optional): used in logging
+# special = <boolean> (default = false): group that needs special treament
+#
+#   [[groups.components]]
+#   kind = <string> [light | sensor]: component kind
+#   id = <int> (default = 1) [1..n]: component id
+#   alias = <string> (optional): used in logging
+#   distance = <int> (default = 0) [0..n]: only on sensors, distance from light.
+
+
+# Bridge
+
+# Bridge
+# ----
+
+[[groups]]
+kind = "bridge"
+id = 1
+alias = "bridge"
+
+  [[groups.components]]
+  kind = "light"
+  id = 1
+  default_state = 2
+
+  [[groups.components]]
+  kind = "sensor"
+  id = 1
+  default_state = 0
+
+  [[groups.components]]
+  kind = "gate"
+  id = 1
+  default_state = 1
+
+  [[groups.components]]
+  kind = "gate"
+  id = 2
+  default_state = 1
+
+  [[groups.components]]
+  kind = "deck"
+  id = 1
+  default_state = 1
+
+# Vessel
+# ----
+
+[[groups]]
+kind = "vessel"
+id = 1
+alias = "vessel_north"
+
+  [[groups.components]]
+  kind = "light"
+  id = 1
+  default_state = 0
+
+  [[groups.components]]
+  kind = "sensor"
+  id = 1
+  default_state = 0
+
+[[groups]]
+kind = "vessel"
+id = 2
+alias = "vessel_south"
+
+  [[groups.components]]
+  kind = "light"
+  id = 1
+  default_state = 0
+
+  [[groups.components]]
+  kind = "sensor"
+  id = 1
+  default_state = 0
+
+[[groups]]
+kind = "vessel"
+id = 3
+alias = "vessel_under_deck"
+
+  [[groups.components]]
+  kind = "sensor"
+  id = 1
+  default_state = 0
