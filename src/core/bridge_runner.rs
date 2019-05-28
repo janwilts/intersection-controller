@@ -36,7 +36,7 @@ impl BridgeRunner {
             }
 
             if !self.one_vessel_high() {
-                self.intersection.read().unwrap().state_receiver.recv();
+                thread::sleep(Duration::from_millis(100));
                 continue;
             }
 
@@ -61,10 +61,7 @@ impl BridgeRunner {
                 .unwrap()
                 .set_state(LightState::Prohibit);
             self.sender.send(Message::Message((
-                Box::new(ComponentTopic {
-                    team_id: Some(4),
-                    uid: bridge_light.read().unwrap().uid(),
-                }),
+                Box::new(ComponentTopic::from(bridge_light.read().unwrap().uid())),
                 Vec::from(String::from("0").as_bytes()),
             )));
 
@@ -72,10 +69,7 @@ impl BridgeRunner {
 
             front_gate.write().unwrap().set_state(GateState::Close);
             self.sender.send(Message::Message((
-                Box::new(ComponentTopic {
-                    team_id: Some(4),
-                    uid: front_gate.read().unwrap().uid(),
-                }),
+                Box::new(ComponentTopic::from(front_gate.read().unwrap().uid())),
                 Vec::from(String::from("1").as_bytes()),
             )));
 
@@ -91,10 +85,7 @@ impl BridgeRunner {
 
             back_gate.write().unwrap().set_state(GateState::Close);
             self.sender.send(Message::Message((
-                Box::new(ComponentTopic {
-                    team_id: Some(4),
-                    uid: back_gate.read().unwrap().uid(),
-                }),
+                Box::new(ComponentTopic::from(back_gate.read().unwrap().uid())),
                 Vec::from(String::from("1").as_bytes()),
             )));
 
@@ -102,11 +93,8 @@ impl BridgeRunner {
 
             deck.write().unwrap().set_state(DeckState::Open);
             self.sender.send(Message::Message((
-                Box::new(ComponentTopic {
-                    team_id: Some(4),
-                    uid: deck.read().unwrap().uid(),
-                }),
-                Vec::from(String::from("1").as_bytes()),
+                Box::new(ComponentTopic::from(deck.read().unwrap().uid())),
+                Vec::from(String::from("0").as_bytes()),
             )));
 
             thread::sleep(Duration::from_secs(10));
@@ -120,37 +108,17 @@ impl BridgeRunner {
                     for light in vessel.read().unwrap().lights.values() {
                         light.write().unwrap().set_state(LightState::Proceed);
                         self.sender.send(Message::Message((
-                            Box::new(ComponentTopic {
-                                team_id: Some(4),
-                                uid: light.read().unwrap().uid(),
-                            }),
+                            Box::new(ComponentTopic::from(light.read().unwrap().uid())),
                             Vec::from(String::from("2").as_bytes()),
                         )));
                     }
 
-                    while waterway_sensor.read().unwrap().state() == SensorState::Low {
-                        waterway_sensor
-                            .read()
-                            .unwrap()
-                            .receiver()
-                            .recv_timeout(Duration::from_secs(20));
-                    }
-
-                    while waterway_sensor.read().unwrap().state() == SensorState::High {
-                        waterway_sensor
-                            .read()
-                            .unwrap()
-                            .receiver()
-                            .recv_timeout(Duration::from_secs(120));
-                    }
+                    thread::sleep(Duration::from_secs(10));
 
                     for light in vessel.read().unwrap().lights.values() {
                         light.write().unwrap().set_state(LightState::Prohibit);
                         self.sender.send(Message::Message((
-                            Box::new(ComponentTopic {
-                                team_id: Some(4),
-                                uid: light.read().unwrap().uid(),
-                            }),
+                            Box::new(ComponentTopic::from(light.read().unwrap().uid())),
                             Vec::from(String::from("0").as_bytes()),
                         )));
                     }
@@ -159,41 +127,33 @@ impl BridgeRunner {
 
             deck.write().unwrap().set_state(DeckState::Close);
             self.sender.send(Message::Message((
-                Box::new(ComponentTopic {
-                    team_id: Some(4),
-                    uid: deck.read().unwrap().uid(),
-                }),
-                Vec::from(String::from("0").as_bytes()),
+                Box::new(ComponentTopic::from(deck.read().unwrap().uid())),
+                Vec::from(String::from("1").as_bytes()),
             )));
 
             thread::sleep(Duration::from_secs(10));
 
             front_gate.write().unwrap().set_state(GateState::Open);
             self.sender.send(Message::Message((
-                Box::new(ComponentTopic {
-                    team_id: Some(4),
-                    uid: front_gate.read().unwrap().uid(),
-                }),
+                Box::new(ComponentTopic::from(front_gate.read().unwrap().uid())),
                 Vec::from(String::from("0").as_bytes()),
             )));
 
             back_gate.write().unwrap().set_state(GateState::Open);
             self.sender.send(Message::Message((
-                Box::new(ComponentTopic {
-                    team_id: Some(4),
-                    uid: back_gate.read().unwrap().uid(),
-                }),
+                Box::new(ComponentTopic::from(back_gate.read().unwrap().uid())),
                 Vec::from(String::from("0").as_bytes()),
             )));
 
+            thread::sleep(Duration::from_secs(4));
+
             bridge_light.write().unwrap().set_state(LightState::Proceed);
             self.sender.send(Message::Message((
-                Box::new(ComponentTopic {
-                    team_id: Some(4),
-                    uid: bridge_light.read().unwrap().uid(),
-                }),
+                Box::new(ComponentTopic::from(bridge_light.read().unwrap().uid())),
                 Vec::from(String::from("2").as_bytes()),
             )));
+
+            thread::sleep(Duration::from_secs(10));
         }
     }
 
@@ -207,7 +167,9 @@ impl BridgeRunner {
                 continue;
             }
 
-            return group.read().unwrap().one_sensor_high();
+            if group.read().unwrap().one_sensor_high() {
+                return true;
+            }
         }
 
         false

@@ -6,18 +6,16 @@ edition = "2018"
 
 [dependencies]
 chrono = "0.4.6"
-colored = "1.8.0"
 config = "0.9.3"
 crossbeam-channel = "0.3.8"
 crossterm = "0.9.5"
-dotenv = "0.14.0"
 failure = "0.1.5"
+fern = "0.5.8"
 log = "0.4.6"
-pretty_env_logger = "0.3.0"
 regex = "1.1.6"
 rumqtt = "0.30.1"
-sentry = "0.15.4"
 serde = "1.0.91"
+serde_derive = "1.0.91"
 time = "0.1.42"
 
 [dependencies.tui]

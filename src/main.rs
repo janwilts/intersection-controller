@@ -1,24 +1,21 @@
 extern crate chrono;
-extern crate colored;
 extern crate config as conf;
 extern crate crossbeam_channel;
-extern crate dotenv;
 #[macro_use]
 extern crate failure;
+extern crate fern;
 #[macro_use]
 extern crate log;
-extern crate pretty_env_logger;
 extern crate regex;
 extern crate rumqtt;
-extern crate sentry;
 extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate time;
 
-use std::env;
 use std::process;
 
 use crossbeam_channel::unbounded;
-use dotenv::dotenv;
 
 use crate::config::Config;
 use crate::core::controller::Controller;
@@ -32,19 +29,32 @@ mod intersections;
 mod io;
 
 fn main() {
-    // Load environment variables.
-    dotenv().unwrap();
-
     // Set up logging.
-    let mut log_builder = pretty_env_logger::formatted_timed_builder();
-    log_builder.parse_filters(&format!("{}=debug", env!("CARGO_PKG_NAME")).replace("-", "_"));
+    let mqtt = fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "[{}] [{}] [{}] {}",
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+                record.level(),
+                record.target().to_uppercase(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Off)
+        // but accept Info if we explicitly mention it
+        .level_for("mqtt", log::LevelFilter::Trace)
+        .chain(fern::log_file("log/mqtt.log").unwrap());
 
-    // Connect to sentry.
-    let _sentry = sentry::init(env::var("SENTRY_DSN").unwrap());
+    let test = fern::Dispatch::new()
+        .level(log::LevelFilter::Off)
+        // but accept Info if we explicitly mention it
+        .level_for("test", log::LevelFilter::Trace)
+        .chain(std::io::stdout());
 
-    // Integrate sentry.
-    sentry::integrations::env_logger::init(Some(log_builder.build()), Default::default());
-    sentry::integrations::panic::register_panic_handler();
+
+    let logger = fern::Dispatch::new().chain(mqtt).chain(test).apply().unwrap();
+
+    warn!(target: "mqtt", "Test");
 
     let cfg = match Config::new("config") {
         Ok(cfg) => cfg,

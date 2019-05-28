@@ -4,7 +4,6 @@ use std::fmt::{Display, Formatter};
 use std::sync::{Arc, RwLock};
 
 use chrono::{DateTime, Utc};
-use colored::Colorize;
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use failure::Fail;
 
@@ -30,8 +29,8 @@ impl ComponentState for SensorState {}
 impl Display for SensorState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            SensorState::Low => write!(f, "{}", "LOW".black()),
-            SensorState::High => write!(f, "{}", "HIGH".white()),
+            SensorState::Low => write!(f, "{}", "LOW"),
+            SensorState::High => write!(f, "{}", "HIGH"),
         }
     }
 }

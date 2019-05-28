@@ -239,7 +239,7 @@ impl Group {
         false
     }
 
-    pub fn reset_all(&mut self) {
+    pub fn reset_all(&self) {
         for s in self.sensors.values() {
             s.write().unwrap().reset();
         }
@@ -255,8 +255,6 @@ impl Group {
         for g in self.gates.values() {
             g.write().unwrap().reset();
         }
-
-        self.reset_score();
     }
 
     pub fn send(&self, uid: ComponentUid) {

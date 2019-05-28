@@ -121,26 +121,26 @@ impl Controller {
 
         let receiver = self.subscriber_receiver.clone();
 
-        for message in receiver.recv() {
+        for message in receiver {
             if let Ok(topic) = LifeCycleTopic::try_from(&message.0[..]) {
                 if topic.device == Device::Simulator && topic.handler == Handler::Connect {
                     for group in self.traffic_lights.read().unwrap().groups.values() {
-                        group.write().unwrap().reset_all();
+                        group.read().unwrap().reset_all();
                     }
 
                     for group in self.bridge.read().unwrap().groups.values() {
-                        group.write().unwrap().reset_all();
+                        group.read().unwrap().reset_all();
                     }
 
                     self.publish_states();
                 } else if topic.device == Device::Simulator && topic.handler == Handler::Disconnect
                 {
                     for group in self.traffic_lights.read().unwrap().groups.values() {
-                        group.write().unwrap().reset_all();
+                        group.read().unwrap().reset_all();
                     }
 
                     for group in self.bridge.read().unwrap().groups.values() {
-                        group.write().unwrap().reset_all();
+                        group.read().unwrap().reset_all();
                     }
                 }
 

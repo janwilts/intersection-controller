@@ -2,7 +2,6 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-use colored::Colorize;
 use failure::Fail;
 
 use crate::intersections::component::ComponentState;
@@ -24,8 +23,8 @@ impl ComponentState for DeckState {}
 impl Display for DeckState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            DeckState::Open => write!(f, "{}", "OPEN".green()),
-            DeckState::Close => write!(f, "{}", "CLOSE".red()),
+            DeckState::Open => write!(f, "{}", "OPEN"),
+            DeckState::Close => write!(f, "{}", "CLOSE"),
         }
     }
 }

@@ -137,8 +137,11 @@ where
         info!("Setting state on {:?} to {}", self.uid(), state);
 
         self.set_state_internal(state);
-        self.sender().send(self.uid());
-        self.group().read().unwrap().send_actuator(self.uid());
+
+        let uid = self.uid();
+
+        self.sender().send(uid);
+        self.group().read().unwrap().send_actuator(uid);
     }
 
     fn uid(&self) -> ComponentUid {

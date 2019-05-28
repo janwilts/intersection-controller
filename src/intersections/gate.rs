@@ -2,7 +2,6 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-use colored::Colorize;
 use failure::Fail;
 
 use crate::intersections::component::ComponentState;
@@ -24,8 +23,8 @@ impl ComponentState for GateState {}
 impl Display for GateState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            GateState::Open => write!(f, "{}", "OPEN".green()),
-            GateState::Close => write!(f, "{}", "CLOSE".red()),
+            GateState::Open => write!(f, "{}", "OPEN"),
+            GateState::Close => write!(f, "{}", "CLOSE"),
         }
     }
 }

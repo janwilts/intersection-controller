@@ -2,7 +2,6 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-use colored::Colorize;
 use failure;
 use failure::Fail;
 
@@ -27,10 +26,10 @@ impl ComponentState for LightState {}
 impl Display for LightState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            LightState::Prohibit => write!(f, "{}", "PROHIBIT".red()),
-            LightState::Transitioning => write!(f, "{}", "TRANSITIONING".yellow()),
-            LightState::Proceed => write!(f, "{}", "PROCEED".green()),
-            LightState::OutOfOrder => write!(f, "{}", "OUT_OF_ORDER".red().on_yellow().underline()),
+            LightState::Prohibit => write!(f, "{}", "PROHIBIT"),
+            LightState::Transitioning => write!(f, "{}", "TRANSITIONING"),
+            LightState::Proceed => write!(f, "{}", "PROCEED"),
+            LightState::OutOfOrder => write!(f, "{}", "OUT_OF_ORDER"),
         }
     }
 }

@@ -39,12 +39,12 @@ alias = "bridge"
   [[groups.components]]
   kind = "gate"
   id = 1
-  default_state = 1
+  default_state = 0
 
   [[groups.components]]
   kind = "gate"
   id = 2
-  default_state = 1
+  default_state = 0
 
   [[groups.components]]
   kind = "deck"

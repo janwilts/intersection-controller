@@ -25,7 +25,7 @@ pub struct Client {
 
 impl Client {
     pub fn new(client_id: String, host: String, port: u16, qos: QoS, team_id: i32) -> Self {
-        info!("Creating new MQTT client with client ID \"{}\"", client_id);
+        info!(target: "mqtt", "Creating new MQTT client with client ID \"{}\"", client_id);
 
         Self {
             options: MqttOptions::new(client_id, host, port),
@@ -48,7 +48,8 @@ impl Client {
     }
 
     pub fn start(&mut self) -> Result<(), failure::Error> {
-        debug!(
+        info!(
+            target: "mqtt",
             "MQTT client \"{}\" connecting to \"{}:{}\"",
             self.options.client_id(),
             self.options.broker_address().0,
@@ -57,7 +58,8 @@ impl Client {
 
         let (client, receiver) = MqttClient::start(self.options.clone())?;
 
-        debug!(
+        info!(
+            target: "mqtt",
             "MQTT client \"{}\" successfully connected to \"{}:{}\"",
             self.options.client_id(),
             self.options.broker_address().0,
@@ -76,7 +78,8 @@ impl Client {
         if let Some(client) = &mut self.client {
             client.subscribe(format!("{}", topic), self.qos)?;
 
-            debug!(
+            info!(
+                target: "mqtt",
                 "MQTT client \"{}\" subscribed to topic \"{}\" on QoS {}",
                 self.options.client_id(),
                 topic,
@@ -89,7 +92,7 @@ impl Client {
         Err(ClientError::NotYetStarted {
             client_id: self.options.client_id(),
         }
-        .into())
+            .into())
     }
 
     pub fn unsubscribe(&mut self, mut topic: Box<dyn Topic>) -> Result<(), failure::Error> {
@@ -98,7 +101,7 @@ impl Client {
         if let Some(client) = &mut self.client {
             client.unsubscribe(format!("{}", topic))?;
 
-            debug!(
+            info!(
                 "MQTT client \"{}\" unsubscribed from topic \"{}\"",
                 self.options.client_id(),
                 topic,
@@ -110,7 +113,7 @@ impl Client {
         Err(ClientError::NotYetStarted {
             client_id: self.options.client_id(),
         }
-        .into())
+            .into())
     }
 
     pub fn publish<P>(
@@ -118,15 +121,15 @@ impl Client {
         mut topic: Box<dyn Topic>,
         payload: P,
     ) -> Result<(), failure::Error>
-    where
-        P: Into<Vec<u8>>,
+        where
+            P: Into<Vec<u8>>,
     {
         topic.set_team_id(self.team_id);
 
         if let Some(client) = &mut self.client {
             client.publish(format!("{}", topic), self.qos, false, payload)?;
 
-            debug!(
+            info!(
                 "MQTT client \"{}\" published with topic \"{}\"",
                 self.options.client_id(),
                 topic,
@@ -138,7 +141,7 @@ impl Client {
         Err(ClientError::NotYetStarted {
             client_id: self.options.client_id(),
         }
-        .into())
+            .into())
     }
 
     pub fn listen(&self) -> Result<Receiver<Notification>, failure::Error> {
@@ -149,6 +152,6 @@ impl Client {
         Err(ClientError::NotYetStarted {
             client_id: self.options.client_id(),
         }
-        .into())
+            .into())
     }
 }
