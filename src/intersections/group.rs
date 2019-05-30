@@ -175,17 +175,6 @@ impl Group {
         self.sensors.values().map(|s| Arc::clone(&s)).collect()
     }
 
-    pub fn lights(&self) -> Vec<ArcActuator<LightState>> {
-        self.lights.values().map(|l| Arc::clone(&l)).collect()
-    }
-
-    pub fn gates(&self) -> Vec<ArcActuator<GateState>> {
-        self.gates.values().map(|g| Arc::clone(&g)).collect()
-    }
-    pub fn decks(&self) -> Vec<ArcActuator<DeckState>> {
-        self.decks.values().map(|d| Arc::clone(&d)).collect()
-    }
-
     pub fn find_sensor(&self, id: ComponentId) -> Option<ArcSensor> {
         Some(Arc::clone(self.sensors.get(&id)?))
     }

@@ -2,100 +2,86 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::Sender;
-
-use crate::core::message_publisher::Message;
-use crate::intersections::component::{Component, ComponentKind, ComponentUid};
+use crate::intersections::component::{Component, ComponentKind, ComponentUid as Uid};
 use crate::intersections::deck::DeckState;
 use crate::intersections::gate::GateState;
 use crate::intersections::group::{ArcGroup, GroupKind};
 use crate::intersections::intersection::ArcIntersection;
 use crate::intersections::light::LightState;
 use crate::intersections::sensor::SensorState;
-use crate::io::topics::component_topic::ComponentTopic;
 
 pub struct BridgeRunner {
     intersection: ArcIntersection,
-    sender: Sender<Message>,
-    stop: bool,
 }
 
 impl BridgeRunner {
-    pub fn new(intersection: ArcIntersection, sender: Sender<Message>) -> Self {
-        Self {
-            intersection,
-            sender,
-            stop: false,
-        }
+    pub fn new(intersection: ArcIntersection) -> Self {
+        Self { intersection }
     }
 
-    pub fn run(&self) {
-        loop {
-            if self.stop {
-                return;
-            }
+    pub fn run(&self) -> Result<(), failure::Error> {
+        let above_deck_sensor = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_sensor(Uid::new(GroupKind::Bridge, 1, ComponentKind::Sensor, 1))
+            .unwrap();
+        let below_deck_sensor = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_sensor(Uid::new(GroupKind::Vessel, 3, ComponentKind::Sensor, 1))
+            .unwrap();
+        let light = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_light(Uid::new(GroupKind::Bridge, 1, ComponentKind::Light, 1))
+            .unwrap();
+        let front_gate = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_gate(Uid::new(GroupKind::Bridge, 1, ComponentKind::Gate, 1))
+            .unwrap();
+        let back_gate = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_gate(Uid::new(GroupKind::Bridge, 1, ComponentKind::Gate, 2))
+            .unwrap();
+        let deck = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_deck(Uid::new(GroupKind::Bridge, 1, ComponentKind::Deck, 1))
+            .unwrap();
 
+        loop {
             if !self.one_vessel_high() {
                 thread::sleep(Duration::from_millis(100));
                 continue;
             }
 
-            let intersection = self.intersection.read().unwrap();
-
-            let bridge_light_id = ComponentUid::new(GroupKind::Bridge, 1, ComponentKind::Light, 1);
-            let front_gate_id = ComponentUid::new(GroupKind::Bridge, 1, ComponentKind::Gate, 1);
-            let back_gate_id = ComponentUid::new(GroupKind::Bridge, 1, ComponentKind::Gate, 1);
-            let deck_sensor_id = ComponentUid::new(GroupKind::Bridge, 1, ComponentKind::Sensor, 1);
-            let deck_id = ComponentUid::new(GroupKind::Bridge, 1, ComponentKind::Deck, 1);
-            let ww_sensor_id = ComponentUid::new(GroupKind::Vessel, 3, ComponentKind::Sensor, 1);
-
-            let bridge_light = intersection.find_light(bridge_light_id).unwrap();
-            let front_gate = intersection.find_gate(front_gate_id).unwrap();
-            let back_gate = intersection.find_gate(back_gate_id).unwrap();
-            let deck_sensor = intersection.find_sensor(deck_sensor_id).unwrap();
-            let deck = intersection.find_deck(deck_id).unwrap();
-            let waterway_sensor = intersection.find_sensor(ww_sensor_id).unwrap();
-
-            bridge_light
-                .write()
-                .unwrap()
-                .set_state(LightState::Prohibit);
-            self.sender.send(Message::Message((
-                Box::new(ComponentTopic::from(bridge_light.read().unwrap().uid())),
-                Vec::from(String::from("0").as_bytes()),
-            )));
-
-            thread::sleep(Duration::from_secs(6));
-
-            front_gate.write().unwrap().set_state(GateState::Close);
-            self.sender.send(Message::Message((
-                Box::new(ComponentTopic::from(front_gate.read().unwrap().uid())),
-                Vec::from(String::from("1").as_bytes()),
-            )));
+            light.write().unwrap().set_state(LightState::Transitioning);
 
             thread::sleep(Duration::from_secs(4));
 
-            while deck_sensor.read().unwrap().state() == SensorState::High {
-                deck_sensor
-                    .read()
-                    .unwrap()
-                    .receiver()
-                    .recv_timeout(Duration::from_secs(20));
+            light.write().unwrap().set_state(LightState::Prohibit);
+
+            thread::sleep(Duration::from_secs(6));
+
+            // Wait for all vehicles to leave the deck.
+            while above_deck_sensor.read().unwrap().state() == SensorState::High {
+                thread::sleep(Duration::from_millis(100));
             }
 
+            front_gate.write().unwrap().set_state(GateState::Close);
             back_gate.write().unwrap().set_state(GateState::Close);
-            self.sender.send(Message::Message((
-                Box::new(ComponentTopic::from(back_gate.read().unwrap().uid())),
-                Vec::from(String::from("1").as_bytes()),
-            )));
 
             thread::sleep(Duration::from_secs(4));
 
             deck.write().unwrap().set_state(DeckState::Open);
-            self.sender.send(Message::Message((
-                Box::new(ComponentTopic::from(deck.read().unwrap().uid())),
-                Vec::from(String::from("0").as_bytes()),
-            )));
 
             thread::sleep(Duration::from_secs(10));
 
@@ -107,58 +93,35 @@ impl BridgeRunner {
 
                     for light in vessel.read().unwrap().lights.values() {
                         light.write().unwrap().set_state(LightState::Proceed);
-                        self.sender.send(Message::Message((
-                            Box::new(ComponentTopic::from(light.read().unwrap().uid())),
-                            Vec::from(String::from("2").as_bytes()),
-                        )));
                     }
 
-                    thread::sleep(Duration::from_secs(10));
+                    while below_deck_sensor.read().unwrap().state() == SensorState::Low {
+                        thread::sleep(Duration::from_millis(100));
+                    }
+
+                    while below_deck_sensor.read().unwrap().state() == SensorState::High {
+                        thread::sleep(Duration::from_millis(100));
+                    }
 
                     for light in vessel.read().unwrap().lights.values() {
                         light.write().unwrap().set_state(LightState::Prohibit);
-                        self.sender.send(Message::Message((
-                            Box::new(ComponentTopic::from(light.read().unwrap().uid())),
-                            Vec::from(String::from("0").as_bytes()),
-                        )));
                     }
                 }
             }
 
             deck.write().unwrap().set_state(DeckState::Close);
-            self.sender.send(Message::Message((
-                Box::new(ComponentTopic::from(deck.read().unwrap().uid())),
-                Vec::from(String::from("1").as_bytes()),
-            )));
 
             thread::sleep(Duration::from_secs(10));
 
             front_gate.write().unwrap().set_state(GateState::Open);
-            self.sender.send(Message::Message((
-                Box::new(ComponentTopic::from(front_gate.read().unwrap().uid())),
-                Vec::from(String::from("0").as_bytes()),
-            )));
-
             back_gate.write().unwrap().set_state(GateState::Open);
-            self.sender.send(Message::Message((
-                Box::new(ComponentTopic::from(back_gate.read().unwrap().uid())),
-                Vec::from(String::from("0").as_bytes()),
-            )));
 
             thread::sleep(Duration::from_secs(4));
 
-            bridge_light.write().unwrap().set_state(LightState::Proceed);
-            self.sender.send(Message::Message((
-                Box::new(ComponentTopic::from(bridge_light.read().unwrap().uid())),
-                Vec::from(String::from("2").as_bytes()),
-            )));
+            light.write().unwrap().set_state(LightState::Proceed);
 
-            thread::sleep(Duration::from_secs(10));
+            thread::sleep(Duration::from_secs(30));
         }
-    }
-
-    pub fn stop(&mut self) {
-        self.stop = false;
     }
 
     fn one_vessel_high(&self) -> bool {

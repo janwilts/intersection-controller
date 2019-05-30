@@ -3,9 +3,9 @@ use crossbeam_channel::Receiver;
 use crate::io::client::Client;
 use crate::io::topics::Topic;
 
-pub enum Message {
-    Message((Box<dyn Topic>, Vec<u8>)),
-    Stop,
+pub struct Message {
+    pub topic: Box<dyn Topic>,
+    pub payload: Vec<u8>,
 }
 
 pub struct MessagePublisher {
@@ -22,16 +22,8 @@ impl MessagePublisher {
     }
 
     pub fn run(mut self) {
-        loop {
-            if let Ok(message) = self.receiver.recv() {
-                if let Message::Stop = message {
-                    break;
-                }
-
-                if let Message::Message((topic, payload)) = message {
-                    self.publisher.publish(topic, payload.clone());
-                }
-            }
+        for message in &self.receiver {
+            self.publisher.publish(message.topic, message.payload);
         }
     }
 }

@@ -1,6 +1,7 @@
 extern crate chrono;
 extern crate config as conf;
 extern crate crossbeam_channel;
+extern crate ctrlc;
 #[macro_use]
 extern crate failure;
 extern crate fern;
@@ -13,9 +14,10 @@ extern crate serde;
 extern crate serde_derive;
 extern crate time;
 
-use std::process;
-
+use chrono::Local;
 use crossbeam_channel::unbounded;
+use log::LevelFilter;
+use serde::export::fmt;
 
 use crate::config::Config;
 use crate::core::controller::Controller;
@@ -30,68 +32,103 @@ mod io;
 
 fn main() {
     // Set up logging.
-    let mqtt = fern::Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "[{}] [{}] [{}] {}",
-                chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
-                record.level(),
-                record.target().to_uppercase(),
-                message
-            ))
-        })
-        .level(log::LevelFilter::Off)
-        // but accept Info if we explicitly mention it
-        .level_for("mqtt", log::LevelFilter::Trace)
-        .chain(fern::log_file("log/mqtt.log").unwrap());
+    set_up_logger().expect("Could not set up logging");
 
-    let test = fern::Dispatch::new()
-        .level(log::LevelFilter::Off)
-        // but accept Info if we explicitly mention it
-        .level_for("test", log::LevelFilter::Trace)
-        .chain(std::io::stdout());
-
-
-    let logger = fern::Dispatch::new().chain(mqtt).chain(test).apply().unwrap();
-
-    warn!(target: "mqtt", "Test");
-
-    let cfg = match Config::new("config") {
-        Ok(cfg) => cfg,
-        Err(err) => {
-            error!("{}", err);
-            process::exit(1);
-        }
-    };
+    let config = Config::new("config").expect("Could not read config");
 
     let (notification_sender, notification_receiver) = unbounded();
 
     let traffic_lights = IntersectionsBuilder::new(notification_sender.clone())
-        .with_defs(&cfg.traffic_lights)
-        .with_blocks(&cfg.traffic_lights_blocks)
+        .with_defs(&config.traffic_lights)
+        .with_blocks(&config.traffic_lights_blocks)
         .finish()
-        .unwrap();
+        .expect("Could not construct traffic lights");
 
     let bridge = IntersectionsBuilder::new(notification_sender.clone())
-        .with_defs(&cfg.bridge)
+        .with_defs(&config.bridge)
         .finish()
-        .unwrap();
+        .expect("Could not construct bridge");
 
-    let mut publisher = ClientBuilder::new(&cfg.io.publisher, &cfg.protocols, cfg.general.team_id)
-        .finalize()
-        .unwrap();
+    let mut publisher = ClientBuilder::new(
+        &config.io.publisher,
+        &config.protocols,
+        config.general.team_id,
+    )
+    .finalize()
+    .unwrap();
 
     publisher.set_last_will(
         Box::new(LifeCycleTopic::new(Device::Controller, Handler::Disconnect)),
         vec![],
     );
 
-    let subscriber = ClientBuilder::new(&cfg.io.subscriber, &cfg.protocols, cfg.general.team_id)
-        .finalize()
-        .unwrap();
+    let subscriber = ClientBuilder::new(
+        &config.io.subscriber,
+        &config.protocols,
+        config.general.team_id,
+    )
+    .finalize()
+    .unwrap();
 
-    let mut controller = Controller::new(traffic_lights, bridge);
-    controller
-        .start(publisher, subscriber)
-        .unwrap_or_else(|_| error!("Something went wrong."));
+    let mut controller = Controller::new(traffic_lights, bridge, notification_receiver);
+    controller.start(publisher, subscriber);
+}
+
+fn set_up_logger() -> Result<(), failure::Error> {
+    let formatter = |out: fern::FormatCallback, message: &fmt::Arguments, record: &log::Record| {
+        out.finish(format_args!(
+            "[{}] [{}] [{}] {}",
+            Local::now().format("%Y-%m-%d %H:%M:%S"),
+            record.level(),
+            record.target().to_uppercase(),
+            message
+        ))
+    };
+
+    let short_formatter = |out: fern::FormatCallback, message: &fmt::Arguments, _: &log::Record| {
+        out.finish(format_args!(
+            "[{}] {}",
+            Local::now().format("%Y-%m-%d %H:%M:%S"),
+            message
+        ))
+    };
+
+    let mqtt_log = fern::Dispatch::new()
+        .format(formatter)
+        .level(LevelFilter::Off)
+        .level_for("mqtt", LevelFilter::Trace)
+        .chain(fern::log_file("log/mqtt.log")?);
+
+    let state_log = fern::Dispatch::new()
+        .format(formatter)
+        .level(LevelFilter::Off)
+        .level_for("state", LevelFilter::Trace)
+        .chain(fern::log_file("log/state.log")?);
+
+    let traffic_lights_log = fern::Dispatch::new()
+        .format(formatter)
+        .level(LevelFilter::Off)
+        .level_for("traffic_lights", LevelFilter::Trace);
+
+    let bridge_log = fern::Dispatch::new()
+        .format(formatter)
+        .level(LevelFilter::Off)
+        .level_for("bridge", LevelFilter::Trace);
+
+    let default_log = fern::Dispatch::new()
+        .format(short_formatter)
+        .level(LevelFilter::Off)
+        .level_for("intersection_controller", LevelFilter::Trace)
+        .chain(fern::log_file("log/log.log")?)
+        .chain(std::io::stdout());
+
+    fern::Dispatch::new()
+        .chain(mqtt_log)
+        .chain(state_log)
+        .chain(traffic_lights_log)
+        .chain(bridge_log)
+        .chain(default_log)
+        .apply()?;
+
+    Ok(())
 }

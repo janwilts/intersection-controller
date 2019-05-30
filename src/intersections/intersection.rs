@@ -62,36 +62,6 @@ impl Intersection {
         lights
     }
 
-    pub fn lights(&self) -> Vec<ArcActuator<LightState>> {
-        let mut lights: Vec<ArcActuator<LightState>> = vec![];
-
-        for group in self.groups.values() {
-            lights.extend(group.read().unwrap().lights());
-        }
-
-        lights
-    }
-
-    pub fn gates(&self) -> Vec<ArcActuator<GateState>> {
-        let mut lights: Vec<ArcActuator<GateState>> = vec![];
-
-        for group in self.groups.values() {
-            lights.extend(group.read().unwrap().gates());
-        }
-
-        lights
-    }
-
-    pub fn decks(&self) -> Vec<ArcActuator<DeckState>> {
-        let mut lights: Vec<ArcActuator<DeckState>> = vec![];
-
-        for group in self.groups.values() {
-            lights.extend(group.read().unwrap().decks());
-        }
-
-        lights
-    }
-
     pub fn find_group(&self, id: GroupId) -> Option<ArcGroup> {
         if let Some(group) = self.groups.get(&id) {
             return Some(Arc::clone(&group));

@@ -7,23 +7,15 @@ use crate::intersections::sensor::SensorState;
 
 pub struct ScorePoller {
     traffic_lights: ArcIntersection,
-    stop: bool,
 }
 
 impl ScorePoller {
     pub fn new(traffic_lights: ArcIntersection) -> Self {
-        Self {
-            traffic_lights,
-            stop: false,
-        }
+        Self { traffic_lights }
     }
 
     pub fn run(&self) {
         loop {
-            if self.stop {
-                return;
-            }
-
             for group in self.traffic_lights.read().unwrap().groups() {
                 let mut should_increase = false;
 
@@ -50,9 +42,5 @@ impl ScorePoller {
 
             thread::sleep(Duration::from_millis(100));
         }
-    }
-
-    pub fn stop(&mut self) {
-        self.stop = false;
     }
 }

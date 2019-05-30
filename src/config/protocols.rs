@@ -1,5 +1,3 @@
-use serde::Deserialize;
-
 use crate::config::config_file::ConfigFile;
 
 #[derive(Deserialize, Clone)]
