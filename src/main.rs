@@ -70,7 +70,7 @@ fn main() {
     .finalize()
     .unwrap();
 
-    let mut controller = Controller::new(traffic_lights, bridge, notification_receiver);
+    let mut controller = Controller::new(traffic_lights, bridge, notification_receiver, config);
     controller.start(publisher, subscriber);
 }
 

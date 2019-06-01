@@ -13,7 +13,7 @@ pub enum LightStateError {
     CouldNotConvert { value: i32 },
 }
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub enum LightState {
     Prohibit,
     Transitioning,

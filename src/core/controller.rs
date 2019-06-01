@@ -5,6 +5,7 @@ use std::thread::JoinHandle;
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 
+use crate::config::Config;
 use crate::core::bridge_runner::BridgeRunner;
 use crate::core::message_publisher::{Message, MessagePublisher};
 use crate::core::message_subscriber::MessageSubscriber;
@@ -48,6 +49,7 @@ impl Controller {
         traffic_lights: ArcIntersection,
         bridge: ArcIntersection,
         notification_receiver: Receiver<Notification>,
+        config: Config,
     ) -> Self {
         let (publisher_sender, publisher_receiver) = unbounded();
         let (subscriber_sender, subscriber_receiver) = unbounded();
@@ -76,7 +78,10 @@ impl Controller {
             score_poller: Arc::new(ScorePoller::new(Arc::clone(&traffic_lights))),
 
             traffic_lights_runner_handle: None,
-            traffic_lights_runner: Arc::new(TrafficLightsRunner::new(Arc::clone(&traffic_lights))),
+            traffic_lights_runner: Arc::new(TrafficLightsRunner::new(
+                Arc::clone(&traffic_lights),
+                config.groups,
+            )),
 
             bridge_runner_handle: None,
             bridge_runner: Arc::new(BridgeRunner::new(Arc::clone(&bridge))),
