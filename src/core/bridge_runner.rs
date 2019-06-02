@@ -4,7 +4,6 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crossbeam_channel::{after, Receiver};
-use failure::Fail;
 
 use crate::intersections::component::{Component, ComponentKind, ComponentUid as Uid};
 use crate::intersections::deck::DeckState;
