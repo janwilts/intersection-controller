@@ -9,6 +9,7 @@ use failure::Fail;
 
 use crate::intersections::component::{Component, ComponentId, ComponentState, ComponentUid};
 use crate::intersections::group::ArcGroup;
+use colored::{Color, Colorize};
 
 pub type ArcSensor = Arc<RwLock<Box<Sensor>>>;
 
@@ -26,11 +27,17 @@ pub enum SensorState {
 
 impl ComponentState for SensorState {}
 
+impl Default for SensorState {
+    fn default() -> Self {
+        SensorState::Low
+    }
+}
+
 impl Display for SensorState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            SensorState::Low => write!(f, "{}", "LOW"),
-            SensorState::High => write!(f, "{}", "HIGH"),
+            SensorState::Low => write!(f, "{}", "LOW".color(Color::White)),
+            SensorState::High => write!(f, "{}", "HIGH".color(Color::Black).on_white()),
         }
     }
 }
@@ -64,34 +71,34 @@ pub struct Sensor {
 
     id: ComponentId,
 
-    alias: Option<String>,
-
     state: SensorState,
     initial_state: SensorState,
     timestamp: DateTime<Utc>,
 
     sender: Sender<ComponentUid>,
-    receiver: Receiver<ComponentUid>,
+    pub receiver: Receiver<ComponentUid>,
+
+    pub distance: i32,
 }
 
 impl Sensor {
     pub fn new(
         group: ArcGroup,
         id: ComponentId,
-        alias: Option<String>,
         initial_state: SensorState,
+        distance: i32,
     ) -> Self {
         let (sender, receiver) = unbounded();
 
         Self {
             group,
             id,
-            alias,
             state: initial_state.clone(),
             initial_state,
             timestamp: Utc::now(),
             sender,
             receiver,
+            distance,
         }
     }
 }
@@ -120,6 +127,10 @@ impl Component<SensorState> for Sensor {
     fn set_state_internal(&mut self, state: SensorState) {
         self.state = state;
         self.timestamp = Utc::now();
+    }
+
+    fn timestamp(&self) -> DateTime<Utc> {
+        self.timestamp.clone()
     }
 
     fn id(&self) -> ComponentId {

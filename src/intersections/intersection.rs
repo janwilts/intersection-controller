@@ -143,14 +143,20 @@ impl Intersection {
     }
 
     pub fn send_state(&self, id: ComponentUid) {
-        self.state_sender.send(id);
+        self.state_sender
+            .send(id)
+            .expect("Could not send state notification");
         self.notification_sender
-            .send(Notification::StateUpdated(id));
+            .send(Notification::StateUpdated(id))
+            .expect("Could not send state notification");
     }
 
     pub fn send_score(&self, id: GroupId) {
-        self.score_sender.send(id);
+        self.score_sender
+            .send(id)
+            .expect("Could not send score notification");
         self.notification_sender
-            .send(Notification::ScoreUpdated(id));
+            .send(Notification::ScoreUpdated(id))
+            .expect("Could not send score notification");
     }
 }

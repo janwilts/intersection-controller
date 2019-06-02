@@ -1,22 +1,40 @@
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::Acquire;
 use std::sync::Arc;
-use std::thread;
 use std::time::Duration;
+
+use crossbeam_channel::{after, Receiver};
+use failure::Fail;
 
 use crate::intersections::component::{Component, ComponentKind, ComponentUid as Uid};
 use crate::intersections::deck::DeckState;
 use crate::intersections::gate::GateState;
-use crate::intersections::group::{ArcGroup, GroupKind};
+use crate::intersections::group::{ArcGroup, GroupId, GroupKind};
 use crate::intersections::intersection::ArcIntersection;
 use crate::intersections::light::LightState;
 use crate::intersections::sensor::SensorState;
 
+#[derive(Fail, Debug)]
+#[fail(display = "Stopped bridge runner")]
+pub struct BridgeRunnerStop {}
+
 pub struct BridgeRunner {
     intersection: ArcIntersection,
+    stop: Arc<AtomicBool>,
+    stop_channel: Receiver<()>,
 }
 
 impl BridgeRunner {
-    pub fn new(intersection: ArcIntersection) -> Self {
-        Self { intersection }
+    pub fn new(
+        intersection: ArcIntersection,
+        stop: Arc<AtomicBool>,
+        stop_channel: Receiver<()>,
+    ) -> Self {
+        Self {
+            intersection,
+            stop,
+            stop_channel,
+        }
     }
 
     pub fn run(&self) -> Result<(), failure::Error> {
@@ -57,33 +75,84 @@ impl BridgeRunner {
             .find_deck(Uid::new(GroupKind::Bridge, 1, ComponentKind::Deck, 1))
             .unwrap();
 
+        let top_vessel = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_group(GroupId {
+                kind: GroupKind::Vessel,
+                id: 1,
+            })
+            .unwrap();
+
+        let bottom_vessel = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_group(GroupId {
+                kind: GroupKind::Vessel,
+                id: 2,
+            })
+            .unwrap();
+
+        let front_vessel_channel = top_vessel.read().unwrap().sensor_receiver.clone();
+        let bottom_vessel_channel = bottom_vessel.read().unwrap().sensor_receiver.clone();
+
         loop {
             if !self.one_vessel_high() {
-                thread::sleep(Duration::from_millis(100));
+                select! {
+                    recv(front_vessel_channel) -> _ => {},
+                    recv(bottom_vessel_channel) -> _ => {},
+                    recv(self.stop_channel) -> _ => {},
+                };
+                self.break_on_stop()?;
+
                 continue;
             }
 
             light.write().unwrap().set_state(LightState::Transitioning);
 
-            thread::sleep(Duration::from_secs(4));
+            select! {
+                recv(after(Duration::from_secs(4))) -> _ => {},
+                recv(self.stop_channel) -> _ => {},
+            };
+            self.break_on_stop()?;
 
             light.write().unwrap().set_state(LightState::Prohibit);
 
-            thread::sleep(Duration::from_secs(6));
+            select! {
+                recv(after(Duration::from_secs(6))) -> _ => {},
+                recv(self.stop_channel) -> _ => {},
+            };
+            self.break_on_stop()?;
 
             // Wait for all vehicles to leave the deck.
             while above_deck_sensor.read().unwrap().state() == SensorState::High {
-                thread::sleep(Duration::from_millis(100));
+                let channel = above_deck_sensor.read().unwrap().receiver.clone();
+
+                select! {
+                    recv(channel) -> _ => {},
+                    recv(self.stop_channel) -> _ => {},
+                };
+                self.break_on_stop()?;
             }
 
             front_gate.write().unwrap().set_state(GateState::Close);
             back_gate.write().unwrap().set_state(GateState::Close);
 
-            thread::sleep(Duration::from_secs(4));
+            select! {
+                recv(after(Duration::from_secs(4))) -> _ => {},
+                recv(self.stop_channel) -> _ => {},
+            };
+            self.break_on_stop()?;
 
             deck.write().unwrap().set_state(DeckState::Open);
 
-            thread::sleep(Duration::from_secs(10));
+            select! {
+                recv(after(Duration::from_secs(10))) -> _ => {},
+                recv(self.stop_channel) -> _ => {},
+            };
+            self.break_on_stop()?;
 
             while self.one_vessel_high() {
                 for vessel in self.main_vessels() {
@@ -95,12 +164,22 @@ impl BridgeRunner {
                         light.write().unwrap().set_state(LightState::Proceed);
                     }
 
+                    let channel = below_deck_sensor.read().unwrap().receiver.clone();
+
                     while below_deck_sensor.read().unwrap().state() == SensorState::Low {
-                        thread::sleep(Duration::from_millis(100));
+                        select! {
+                            recv(channel) -> _ => {},
+                            recv(self.stop_channel) -> _ => {},
+                        };
+                        self.break_on_stop()?;
                     }
 
                     while below_deck_sensor.read().unwrap().state() == SensorState::High {
-                        thread::sleep(Duration::from_millis(100));
+                        select! {
+                            recv(channel) -> _ => {},
+                            recv(self.stop_channel) -> _ => {},
+                        };
+                        self.break_on_stop()?;
                     }
 
                     for light in vessel.read().unwrap().lights.values() {
@@ -111,16 +190,28 @@ impl BridgeRunner {
 
             deck.write().unwrap().set_state(DeckState::Close);
 
-            thread::sleep(Duration::from_secs(10));
+            select! {
+                recv(after(Duration::from_secs(10))) -> _ => {},
+                recv(self.stop_channel) -> _ => {},
+            };
+            self.break_on_stop()?;
 
             front_gate.write().unwrap().set_state(GateState::Open);
             back_gate.write().unwrap().set_state(GateState::Open);
 
-            thread::sleep(Duration::from_secs(4));
+            select! {
+                recv(after(Duration::from_secs(4))) -> _ => {},
+                recv(self.stop_channel) -> _ => {},
+            };
+            self.break_on_stop()?;
 
             light.write().unwrap().set_state(LightState::Proceed);
 
-            thread::sleep(Duration::from_secs(30));
+            select! {
+                recv(after(Duration::from_secs(30))) -> _ => {},
+                recv(self.stop_channel) -> _ => {},
+            };
+            self.break_on_stop()?;
         }
     }
 
@@ -152,5 +243,15 @@ impl BridgeRunner {
         }
 
         groups
+    }
+
+    fn break_on_stop(&self) -> Result<(), failure::Error> {
+        if self.stop.load(Acquire) {
+            warn!("Stopping bridge runner.");
+
+            return Err(BridgeRunnerStop {}.into());
+        }
+
+        Ok(())
     }
 }

@@ -1,36 +1,59 @@
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering::Acquire;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use crossbeam_channel::{after, Receiver};
 
 use crate::config::groups::{Group as ConfigGroup, Groups as ConfigGroups};
-use crate::intersections::component::{Component, ComponentKind};
+use crate::intersections::component::Component;
 use crate::intersections::group::{ArcGroup, GroupKind};
 use crate::intersections::intersection::ArcIntersection;
 use crate::intersections::light::LightState;
 
+#[derive(Fail, Debug)]
+#[fail(display = "Stopped traffic lights runner")]
+pub struct TrafficLightsRunnerStop {}
+
 pub struct TrafficLightsRunner {
     intersection: ArcIntersection,
-
     groups_config: ConfigGroups,
+
+    stop: Arc<AtomicBool>,
+    stop_channel: Receiver<()>,
 }
 
 impl TrafficLightsRunner {
-    pub fn new(intersection: ArcIntersection, groups_config: ConfigGroups) -> Self {
+    pub fn new(
+        intersection: ArcIntersection,
+        groups_config: ConfigGroups,
+        stop: Arc<AtomicBool>,
+        stop_channel: Receiver<()>,
+    ) -> Self {
         Self {
             intersection,
             groups_config,
+            stop,
+            stop_channel,
         }
     }
 
-    pub fn run(&self) {
+    pub fn run(&self) -> Result<(), failure::Error> {
+        let state_receiver = self.intersection.read().unwrap().state_receiver.clone();
+
         loop {
             let runnables = self.intersection.read().unwrap().get_runnables().unwrap();
 
             if runnables.is_empty() {
-                thread::sleep(Duration::from_millis(100));
+                select! {
+                    recv(state_receiver) -> _ => {},
+                    recv(self.stop_channel) -> _ => {},
+                }
+
+                self.break_on_stop()?;
+
                 continue;
             }
 
@@ -42,14 +65,23 @@ impl TrafficLightsRunner {
             for (kind, runnables) in by_kind {
                 let times = all_times.get(&kind).unwrap().clone();
 
+                let stop = Arc::clone(&self.stop);
+                let stop_channel = self.stop_channel.clone();
+
                 handles.push(thread::spawn(move || {
                     for group in runnables.clone() {
                         for light in group.read().unwrap().lights.values() {
                             light.write().unwrap().set_state(LightState::Proceed);
                         }
                     }
+                    select! {
+                        recv(after(times.get(&LightState::Proceed).unwrap().clone())) -> _ => {},
+                        recv(stop_channel) -> _ => {},
+                    };
 
-                    thread::sleep(times.get(&LightState::Proceed).unwrap().clone());
+                    if stop.load(Acquire) {
+                        return;
+                    }
 
                     for group in runnables.clone() {
                         for light in group.read().unwrap().lights.values() {
@@ -57,7 +89,14 @@ impl TrafficLightsRunner {
                         }
                     }
 
-                    thread::sleep(times.get(&LightState::Transitioning).unwrap().clone());
+                    select! {
+                        recv(after(times.get(&LightState::Transitioning).unwrap().clone())) -> _ => {},
+                        recv(stop_channel) -> _ => {},
+                    };
+
+                    if stop.load(Acquire) {
+                        return;
+                    }
 
                     for group in runnables.clone() {
                         for light in group.read().unwrap().lights.values() {
@@ -70,10 +109,17 @@ impl TrafficLightsRunner {
             }
 
             for handle in handles {
-                handle.join();
+                handle.join().expect("Could not join sub threads");
             }
 
-            thread::sleep(Duration::from_secs(2));
+            self.break_on_stop()?;
+
+            select! {
+                recv(after(Duration::from_secs(1))) -> _ => {},
+                recv(self.stop_channel) -> _ => {},
+            };
+
+            self.break_on_stop()?;
         }
     }
 
@@ -158,5 +204,15 @@ impl TrafficLightsRunner {
         }
 
         None
+    }
+
+    fn break_on_stop(&self) -> Result<(), failure::Error> {
+        if self.stop.load(Acquire) {
+            warn!("Stopping traffic lights runner.");
+
+            return Err(TrafficLightsRunnerStop {}.into());
+        }
+
+        Ok(())
     }
 }

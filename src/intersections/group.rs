@@ -12,6 +12,7 @@ use crate::intersections::gate::GateState;
 use crate::intersections::intersection::ArcIntersection;
 use crate::intersections::light::LightState;
 use crate::intersections::sensor::{ArcSensor, SensorState};
+use colored::{Color, Colorize};
 
 pub type ArcGroup = Arc<RwLock<Box<Group>>>;
 
@@ -45,11 +46,11 @@ impl fmt::Display for GroupKind {
 impl fmt::Debug for GroupKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            GroupKind::MotorVehicle => write!(f, "MV"),
-            GroupKind::Cycle => write!(f, "C"),
-            GroupKind::Foot => write!(f, "F"),
-            GroupKind::Vessel => write!(f, "V"),
-            GroupKind::Bridge => write!(f, "B"),
+            GroupKind::MotorVehicle => write!(f, "{}", "MV".color(Color::White)),
+            GroupKind::Cycle => write!(f, "{}", "C".color(Color::Red)),
+            GroupKind::Foot => write!(f, "{}", "F".color(Color::Yellow)),
+            GroupKind::Vessel => write!(f, "{}", "V".color(Color::Blue)),
+            GroupKind::Bridge => write!(f, "{}", "B".color(Color::Blue)),
         }
     }
 }
@@ -94,7 +95,6 @@ pub struct Group {
 
     pub id: GroupId,
 
-    pub alias: Option<String>,
     pub special: bool,
 
     pub sensors: HashMap<ComponentId, ArcSensor>,
@@ -121,12 +121,7 @@ pub struct Group {
 }
 
 impl Group {
-    pub fn new(
-        intersection: ArcIntersection,
-        id: GroupId,
-        alias: Option<String>,
-        special: bool,
-    ) -> Self {
+    pub fn new(intersection: ArcIntersection, id: GroupId, special: bool) -> Self {
         let (sensor_sender, sensor_receiver) = unbounded();
         let (light_sender, light_receiver) = unbounded();
         let (gate_sender, gate_receiver) = unbounded();
@@ -137,7 +132,6 @@ impl Group {
         Self {
             intersection,
             id,
-            alias,
             special,
 
             sensors: HashMap::new(),
@@ -191,17 +185,9 @@ impl Group {
         Some(Arc::clone(self.decks.get(&id)?))
     }
 
-    pub fn alias(&self) -> Option<String> {
-        self.alias.clone()
-    }
-
     pub fn set_score(&mut self, score: i32) {
         self.score = score;
         self.intersection.read().unwrap().send_score(self.id);
-    }
-
-    pub fn increase_score(&mut self, score: i32) {
-        self.set_score(self.score + score);
     }
 
     pub fn reset_score(&mut self) {
@@ -254,11 +240,14 @@ impl Group {
             ComponentKind::Light => self.light_sender.send(uid),
             ComponentKind::Gate => self.gate_sender.send(uid),
             ComponentKind::Deck => self.deck_sender.send(uid),
-        };
+        }
+        .expect("Could not send component notification");
     }
 
     pub fn send_actuator(&self, uid: ComponentUid) {
         self.send(uid);
-        self.actuator_sender.send(uid);
+        self.actuator_sender
+            .send(uid)
+            .expect("Could not send actuator notification");
     }
 }

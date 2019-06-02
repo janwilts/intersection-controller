@@ -20,6 +20,12 @@ pub enum DeckState {
 
 impl ComponentState for DeckState {}
 
+impl Default for DeckState {
+    fn default() -> Self {
+        DeckState::Close
+    }
+}
+
 impl Display for DeckState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {

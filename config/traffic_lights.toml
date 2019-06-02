@@ -6,13 +6,11 @@
 # [[groups]]
 # kind = <string> [foot | cycle | motor_vehicle | vessel]: group kind
 # id = <int> (default = 1) [1..n]: group id
-# alias = <string> (optional): used in logging
 # special = <boolean> (default = false): group that needs special treament
 #
 #   [[groups.components]]
 #   kind = <string> [light | sensor]: component kind
 #   id = <int> (default = 1) [1..n]: component id
-#   alias = <string> (optional): used in logging
 #   distance = <int> (default = 0) [0..n]: only on sensors, distance from light.
 
 # Foot
@@ -23,256 +21,184 @@
 [[groups]]
 kind = "foot"
 id = 1
-alias = "north__west_to_east"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "center"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "end"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "start"
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
-  alias = "center"
   distance = 0
-  default_state = 0
 
 [[groups]]
 kind = "foot"
 id = 2
-alias = "north__east_to_west"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "end"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "center"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "center"
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
-  alias = "start"
   distance = 0
-  default_state = 0
 
 # Foot - East side
 
 [[groups]]
 kind = "foot"
 id = 3
-alias = "east__nort_to_south"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "center"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "end"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "start"
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
-  alias = "center"
   distance = 0
-  default_state = 0
 
 [[groups]]
 kind = "foot"
 id = 4
-alias = "east__south_to_north"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "end"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "center"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "center"
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
-  alias = "start"
   distance = 0
-  default_state = 0
 
 # Foot - South side
 
 [[groups]]
 kind = "foot"
 id = 5
-alias = "south__east_to_west"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "center"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "end"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "start"
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
-  alias = "center"
   distance = 0
-  default_state = 0
 
 [[groups]]
 kind = "foot"
 id = 6
-alias = "south__west_to_east"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "end"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "center"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "center"
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
-  alias = "start"
   distance = 0
-  default_state = 0
 
 # Foot - West side
 
 [[groups]]
 kind = "foot"
 id = 7
-alias = "west__south_to_north"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "center"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "end"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "start"
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
-  alias = "center"
   distance = 0
-  default_state = 0
 
 [[groups]]
 kind = "foot"
 id = 8
-alias = "west__north_to_south"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "end"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "center"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "center"
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
-  alias = "start"
   distance = 0
-  default_state = 0
 
 # Cycle
 # ----
@@ -282,80 +208,60 @@ alias = "west__north_to_south"
 [[groups]]
 kind = "cycle"
 id = 1
-alias = "north"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "start"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "start"
   distance = 0
-  default_state = 0
 
 # Cycle - East side
 
 [[groups]]
 kind = "cycle"
 id = 2
-alias = "east"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "start"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "start"
   distance = 0
-  default_state = 0
 
 # Cycle - South side
 
 [[groups]]
 kind = "cycle"
 id = 3
-alias = "south"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "start"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "start"
   distance = 0
-  default_state = 0
 
 # Cycle - West side
 
 [[groups]]
 kind = "cycle"
 id = 4
-alias = "west"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "start"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
-  alias = "start"
   distance = 0
-  default_state = 0
 
 # Motor vehicle
 # ----
@@ -365,369 +271,300 @@ alias = "west"
 [[groups]]
 kind = "motor_vehicle"
 id = 1
-alias = "north_to_west"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
 [[groups]]
 kind = "motor_vehicle"
 id = 2
-alias = "north_to_south"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
 [[groups]]
 kind = "motor_vehicle"
 id = 3
-alias = "north_to_east"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
 # MV - East side
 
 [[groups]]
 kind = "motor_vehicle"
 id = 4
-alias = "east_to_north"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 3
   distance = 2
-  default_state = 0
 
 [[groups]]
 kind = "motor_vehicle"
 id = 5
-alias = "east_to_west"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "right"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "left"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 3
   distance = 2
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 4
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 5
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 6
   distance = 2
-  default_state = 0
 
 [[groups]]
 kind = "motor_vehicle"
 id = 6
-alias = "east_to_south"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 3
   distance = 2
-  default_state = 0
 
 # MV - South side
 
 [[groups]]
 kind = "motor_vehicle"
 id = 7
-alias = "south_to_east"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "right"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "left"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 3
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 4
   distance = 1
-  default_state = 0
 
 [[groups]]
 kind = "motor_vehicle"
 id = 8
-alias = "south_to_west_and_north"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
 # MV - East side
 
 [[groups]]
 kind = "motor_vehicle"
 id = 9
-alias = "west_to_south"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 3
   distance = 2
-  default_state = 0
 
 [[groups]]
 kind = "motor_vehicle"
 id = 10
-alias = "west_to_east"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  alias = "right"
-  default_state = 0
 
   [[groups.components]]
   kind = "light"
   id = 2
-  alias = "left"
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 3
   distance = 2
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 4
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 5
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 6
   distance = 2
-  default_state = 0
 
 [[groups]]
 kind = "motor_vehicle"
 id = 11
-alias = "west_to_north"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 2
   distance = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 3
-  default_state = 0
+  distance = 2
 
 # MV - Special
 
 [[groups]]
 kind = "motor_vehicle"
 id = 12
-alias = "bus_loop"
 
   [[groups.components]]
   kind = "light"
   id = 1
-  default_state = 0
 
   [[groups.components]]
   kind = "sensor"
   id = 1
   distance = 0
-  default_state = 0

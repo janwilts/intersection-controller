@@ -77,7 +77,6 @@ impl<'a> IntersectionsBuilder<'a> {
             let group = Arc::new(RwLock::new(Box::new(Group::new(
                 Arc::clone(&intersection),
                 id,
-                conf_group.alias.clone(),
                 match conf_group.special {
                     Some(special) => special,
                     None => false,
@@ -114,8 +113,14 @@ impl<'a> IntersectionsBuilder<'a> {
                     let component = Arc::new(RwLock::new(Box::new(Sensor::new(
                         Arc::clone(&group),
                         id,
-                        conf_compt.alias.clone(),
-                        SensorState::try_from(conf_compt.default_state)?,
+                        match conf_compt.initial_state {
+                            Some(state) => SensorState::try_from(state)?,
+                            None => SensorState::default(),
+                        },
+                        match conf_compt.distance {
+                            Some(distance) => distance,
+                            None => 0,
+                        },
                     ))));
 
                     group.write().unwrap().sensors.insert(id, component);
@@ -125,8 +130,10 @@ impl<'a> IntersectionsBuilder<'a> {
                         Arc::new(RwLock::new(Box::new(Actuator::new(
                             Arc::clone(&group),
                             id,
-                            conf_compt.alias.clone(),
-                            LightState::try_from(conf_compt.default_state)?,
+                            match conf_compt.initial_state {
+                                Some(state) => LightState::try_from(state)?,
+                                None => LightState::default(),
+                            },
                         ))));
 
                     group.write().unwrap().lights.insert(id, component);
@@ -136,8 +143,10 @@ impl<'a> IntersectionsBuilder<'a> {
                         Arc::new(RwLock::new(Box::new(Actuator::new(
                             Arc::clone(&group),
                             id,
-                            conf_compt.alias.clone(),
-                            GateState::try_from(conf_compt.default_state)?,
+                            match conf_compt.initial_state {
+                                Some(state) => GateState::try_from(state)?,
+                                None => GateState::default(),
+                            },
                         ))));
 
                     group.write().unwrap().gates.insert(id, component);
@@ -147,8 +156,10 @@ impl<'a> IntersectionsBuilder<'a> {
                         Arc::new(RwLock::new(Box::new(Actuator::new(
                             Arc::clone(&group),
                             id,
-                            conf_compt.alias.clone(),
-                            DeckState::try_from(conf_compt.default_state)?,
+                            match conf_compt.initial_state {
+                                Some(state) => DeckState::try_from(state)?,
+                                None => DeckState::default(),
+                            },
                         ))));
 
                     group.write().unwrap().decks.insert(id, component);

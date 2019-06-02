@@ -6,6 +6,7 @@ use failure;
 use failure::Fail;
 
 use crate::intersections::component::ComponentState;
+use colored::{Color, Colorize};
 
 #[derive(Debug, Fail)]
 pub enum LightStateError {
@@ -23,12 +24,18 @@ pub enum LightState {
 
 impl ComponentState for LightState {}
 
+impl Default for LightState {
+    fn default() -> Self {
+        LightState::Prohibit
+    }
+}
+
 impl Display for LightState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            LightState::Prohibit => write!(f, "{}", "PROHIBIT"),
-            LightState::Transitioning => write!(f, "{}", "TRANSITIONING"),
-            LightState::Proceed => write!(f, "{}", "PROCEED"),
+            LightState::Prohibit => write!(f, "{}", "PROHIBIT".color(Color::Red)),
+            LightState::Transitioning => write!(f, "{}", "TRANSITIONING".color(Color::Yellow)),
+            LightState::Proceed => write!(f, "{}", "PROCEED".color(Color::Green)),
             LightState::OutOfOrder => write!(f, "{}", "OUT_OF_ORDER"),
         }
     }

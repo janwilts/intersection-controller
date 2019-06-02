@@ -23,7 +23,9 @@ impl MessagePublisher {
 
     pub fn run(mut self) {
         for message in &self.receiver {
-            self.publisher.publish(message.topic, message.payload);
+            self.publisher
+                .publish(message.topic, message.payload)
+                .expect("Could not send publish message");
         }
     }
 }

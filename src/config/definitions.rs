@@ -4,16 +4,14 @@ use crate::config::config_file::ConfigFile;
 pub struct Component {
     pub kind: String,
     pub id: i32,
-    pub alias: Option<String>,
     pub distance: Option<i32>,
-    pub default_state: i32,
+    pub initial_state: Option<i32>,
 }
 
 #[derive(Deserialize)]
 pub struct Group {
     pub kind: String,
     pub id: i32,
-    pub alias: Option<String>,
     pub special: Option<bool>,
     pub components: Option<Vec<Component>>,
 }

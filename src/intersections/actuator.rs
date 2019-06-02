@@ -16,8 +16,6 @@ where
 
     id: ComponentId,
 
-    alias: Option<String>,
-
     state: S,
     initial_state: S,
     timestamp: DateTime<Utc>,
@@ -30,13 +28,12 @@ impl<S> Actuator<S>
 where
     S: ComponentState + Send,
 {
-    pub fn new(group: ArcGroup, id: ComponentId, alias: Option<String>, initial_state: S) -> Self {
+    pub fn new(group: ArcGroup, id: ComponentId, initial_state: S) -> Self {
         let (sender, receiver) = unbounded();
 
         Self {
             group,
             id,
-            alias,
             state: initial_state,
             initial_state,
             timestamp: Utc::now(),
@@ -73,6 +70,10 @@ where
     fn set_state_internal(&mut self, state: S) {
         self.state = state;
         self.timestamp = Utc::now();
+    }
+
+    fn timestamp(&self) -> DateTime<Utc> {
+        self.timestamp.clone()
     }
 
     fn id(&self) -> ComponentId {

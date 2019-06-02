@@ -25,7 +25,8 @@ impl MessageSubscriber {
             let topic = message.topic_name;
             let payload = String::from_utf8_lossy(&message.payload);
 
-            debug!(
+            info!(
+                target: "mqtt",
                 "MQTT Client \"{}\" received a message with topic \"{}\" and payload \"{}\".",
                 self.subscriber.options.client_id(),
                 topic,
@@ -36,6 +37,7 @@ impl MessageSubscriber {
                 .send((topic.clone(), String::from(payload.clone())))
                 .unwrap_or_else(|_| {
                     error!(
+                        target: "mqtt",
                         "Could not send message on topic \"{}\" with payload \"{}\".",
                         topic, payload,
                     )

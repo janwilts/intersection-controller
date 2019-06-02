@@ -1,7 +1,10 @@
 use std::convert::TryFrom;
 use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
+use std::time::Duration;
 
+use chrono::{DateTime, Utc};
+use colored::{Color, Colorize};
 use crossbeam_channel::{Receiver, Sender};
 use failure;
 
@@ -35,10 +38,10 @@ impl Display for ComponentKind {
 impl Debug for ComponentKind {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            ComponentKind::Light => write!(f, "L"),
-            ComponentKind::Sensor => write!(f, "S"),
-            ComponentKind::Gate => write!(f, "G"),
-            ComponentKind::Deck => write!(f, "D"),
+            ComponentKind::Light => write!(f, "{}", "L".color(Color::Yellow)),
+            ComponentKind::Sensor => write!(f, "{}", "S".color(Color::Green)),
+            ComponentKind::Gate => write!(f, "{}", "G".color(Color::Magenta)),
+            ComponentKind::Deck => write!(f, "{}", "D".color(Color::Blue)),
         }
     }
 }
@@ -116,7 +119,7 @@ impl Debug for ComponentUid {
     }
 }
 
-pub trait ComponentState: Clone + Copy + Display + Into<i32> + TryFrom<i32> {}
+pub trait ComponentState: Clone + Copy + Default + Display + Into<i32> + TryFrom<i32> {}
 
 pub trait Component<S>: Send
 where
@@ -130,6 +133,7 @@ where
     fn state(&self) -> S;
     fn initial_state(&self) -> S;
     fn set_state_internal(&mut self, state: S);
+    fn timestamp(&self) -> DateTime<Utc>;
 
     fn id(&self) -> ComponentId;
 
@@ -140,7 +144,9 @@ where
 
         let uid = self.uid();
 
-        self.sender().send(uid);
+        self.sender()
+            .send(uid)
+            .expect("Could not send state notification");
         self.group().read().unwrap().send_actuator(uid);
     }
 
@@ -155,5 +161,9 @@ where
 
     fn reset(&mut self) {
         self.set_state(self.initial_state());
+    }
+
+    fn triggered_for(&self, duration: Duration) -> bool {
+        (Utc::now() - self.timestamp()).to_std().unwrap() >= duration
     }
 }

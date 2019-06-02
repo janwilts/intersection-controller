@@ -20,6 +20,12 @@ pub enum GateState {
 
 impl ComponentState for GateState {}
 
+impl Default for GateState {
+    fn default() -> Self {
+        GateState::Open
+    }
+}
+
 impl Display for GateState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {

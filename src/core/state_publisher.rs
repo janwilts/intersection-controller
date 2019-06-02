@@ -42,10 +42,12 @@ impl StatePublisher {
                     continue;
                 }
 
-                self.sender.send(Message {
-                    topic: Box::new(ComponentTopic::from(id)),
-                    payload: self.get_payload(id)?.to_string().into_bytes(),
-                });
+                self.sender
+                    .send(Message {
+                        topic: Box::new(ComponentTopic::from(id)),
+                        payload: self.get_payload(id)?.to_string().into_bytes(),
+                    })
+                    .expect("Could not send state notification");
             }
         }
 
