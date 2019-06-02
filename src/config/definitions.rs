@@ -12,7 +12,7 @@ pub struct Component {
 pub struct Group {
     pub kind: String,
     pub id: i32,
-    pub special: Option<bool>,
+    pub can_be_blocked: Option<bool>,
     pub components: Option<Vec<Component>>,
 }
 

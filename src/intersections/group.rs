@@ -95,7 +95,8 @@ pub struct Group {
 
     pub id: GroupId,
 
-    pub special: bool,
+    pub can_be_blocked: bool,
+    pub block: bool,
 
     pub sensors: HashMap<ComponentId, ArcSensor>,
     pub lights: HashMap<ComponentId, ArcActuator<LightState>>,
@@ -121,7 +122,7 @@ pub struct Group {
 }
 
 impl Group {
-    pub fn new(intersection: ArcIntersection, id: GroupId, special: bool) -> Self {
+    pub fn new(intersection: ArcIntersection, id: GroupId, can_be_blocked: bool) -> Self {
         let (sensor_sender, sensor_receiver) = unbounded();
         let (light_sender, light_receiver) = unbounded();
         let (gate_sender, gate_receiver) = unbounded();
@@ -132,7 +133,9 @@ impl Group {
         Self {
             intersection,
             id,
-            special,
+
+            can_be_blocked,
+            block: false,
 
             sensors: HashMap::new(),
             lights: HashMap::new(),

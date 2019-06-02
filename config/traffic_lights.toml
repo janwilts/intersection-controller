@@ -7,6 +7,7 @@
 # kind = <string> [foot | cycle | motor_vehicle | vessel]: group kind
 # id = <int> (default = 1) [1..n]: group id
 # special = <boolean> (default = false): group that needs special treament
+# can_be_blocked = <boolean> (default = false): group that is blockable when there is a lot of traffic.
 #
 #   [[groups.components]]
 #   kind = <string> [light | sensor]: component kind
@@ -307,6 +308,7 @@ id = 2
 [[groups]]
 kind = "motor_vehicle"
 id = 3
+can_be_blocked = true
 
   [[groups.components]]
   kind = "light"
@@ -417,6 +419,7 @@ id = 6
 [[groups]]
 kind = "motor_vehicle"
 id = 7
+can_be_blocked = true
 
   [[groups.components]]
   kind = "light"
@@ -492,6 +495,7 @@ id = 9
 [[groups]]
 kind = "motor_vehicle"
 id = 10
+can_be_blocked = true
 
   [[groups.components]]
   kind = "light"

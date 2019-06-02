@@ -77,8 +77,8 @@ impl<'a> IntersectionsBuilder<'a> {
             let group = Arc::new(RwLock::new(Box::new(Group::new(
                 Arc::clone(&intersection),
                 id,
-                match conf_group.special {
-                    Some(special) => special,
+                match conf_group.can_be_blocked {
+                    Some(can_be_blocked) => can_be_blocked,
                     None => false,
                 },
             ))));

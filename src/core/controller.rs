@@ -4,6 +4,7 @@ use std::sync::atomic::Ordering::Release;
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
+use std::time::Duration;
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 
@@ -14,7 +15,8 @@ use crate::core::message_subscriber::MessageSubscriber;
 use crate::core::score_poller::ScorePoller;
 use crate::core::state_publisher::StatePublisher;
 use crate::core::traffic_lights_runner::TrafficLightsRunner;
-use crate::intersections::component::Component;
+use crate::intersections::component::{Component, ComponentId, ComponentKind};
+use crate::intersections::group::{ArcGroup, GroupId, GroupKind};
 use crate::intersections::intersection::{ArcIntersection, Notification};
 use crate::intersections::sensor::SensorState;
 use crate::io::client::Client;
@@ -220,10 +222,42 @@ impl Controller {
 
         if let Some(sensor) = self.traffic_lights.read().unwrap().find_sensor(topic.uid) {
             sensor.write().unwrap().set_state(state);
+
+            if sensor.read().unwrap().group().read().unwrap().id
+                == (GroupId {
+                    kind: GroupKind::MotorVehicle,
+                    id: 14,
+                })
+            {
+                self.handle_jam_sensor(Arc::clone(&sensor.read().unwrap().group()));
+            }
         }
 
         if let Some(sensor) = self.bridge.read().unwrap().find_sensor(topic.uid) {
             sensor.write().unwrap().set_state(state);
+        }
+    }
+
+    fn handle_jam_sensor(&self, group: ArcGroup) {
+        let sensor = group
+            .read()
+            .unwrap()
+            .find_sensor(ComponentId {
+                kind: ComponentKind::Sensor,
+                id: 1,
+            })
+            .unwrap();
+
+        if sensor.read().unwrap().triggered_for(Duration::from_secs(5)) {
+            warn!("Bridge queue too full! Blocking traffic lights");
+
+            for blockable in self.traffic_lights.read().unwrap().blockable_groups() {
+                blockable.write().unwrap().block = true;
+            }
+        } else {
+            for blockable in self.traffic_lights.read().unwrap().blockable_groups() {
+                blockable.write().unwrap().block = false;
+            }
         }
     }
 

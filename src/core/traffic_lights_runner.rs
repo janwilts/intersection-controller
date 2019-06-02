@@ -13,10 +13,6 @@ use crate::intersections::group::{ArcGroup, GroupKind};
 use crate::intersections::intersection::ArcIntersection;
 use crate::intersections::light::LightState;
 
-#[derive(Fail, Debug)]
-#[fail(display = "Stopped traffic lights runner")]
-pub struct TrafficLightsRunnerStop {}
-
 pub struct TrafficLightsRunner {
     intersection: ArcIntersection,
     groups_config: ConfigGroups,
@@ -40,20 +36,23 @@ impl TrafficLightsRunner {
         }
     }
 
-    pub fn run(&self) -> Result<(), failure::Error> {
+    pub fn run(&self) {
         let state_receiver = self.intersection.read().unwrap().state_receiver.clone();
 
         loop {
+            select! {
+                recv(self.stop_channel) -> _ => {},
+                recv(state_receiver) -> _ => {},
+                recv(after(Duration::from_millis(100))) -> _ => {},
+            }
+
+            if self.stop.load(Acquire) {
+                break;
+            }
+
             let runnables = self.intersection.read().unwrap().get_runnables().unwrap();
 
             if runnables.is_empty() {
-                select! {
-                    recv(state_receiver) -> _ => {},
-                    recv(self.stop_channel) -> _ => {},
-                }
-
-                self.break_on_stop()?;
-
                 continue;
             }
 
@@ -112,15 +111,21 @@ impl TrafficLightsRunner {
                 handle.join().expect("Could not join sub threads");
             }
 
-            self.break_on_stop()?;
+            if self.stop.load(Acquire) {
+                break;
+            }
 
             select! {
                 recv(after(Duration::from_secs(1))) -> _ => {},
                 recv(self.stop_channel) -> _ => {},
             };
 
-            self.break_on_stop()?;
+            if self.stop.load(Acquire) {
+                break;
+            }
         }
+
+        warn!("Stopping traffic lights runner");
     }
 
     fn runnables_by_group_kind(
@@ -204,15 +209,5 @@ impl TrafficLightsRunner {
         }
 
         None
-    }
-
-    fn break_on_stop(&self) -> Result<(), failure::Error> {
-        if self.stop.load(Acquire) {
-            warn!("Stopping traffic lights runner.");
-
-            return Err(TrafficLightsRunnerStop {}.into());
-        }
-
-        Ok(())
     }
 }

@@ -52,6 +52,22 @@ impl Intersection {
         self.groups.values().map(|g| Arc::clone(&g)).collect()
     }
 
+    pub fn unblocked_groups(&self) -> Vec<ArcGroup> {
+        self.groups()
+            .iter()
+            .filter(|g| !g.read().unwrap().block)
+            .map(|g| Arc::clone(&g))
+            .collect()
+    }
+
+    pub fn blockable_groups(&self) -> Vec<ArcGroup> {
+        self.groups()
+            .iter()
+            .filter(|g| g.read().unwrap().can_be_blocked)
+            .map(|g| Arc::clone(&g))
+            .collect()
+    }
+
     pub fn sensors(&self) -> Vec<ArcSensor> {
         let mut lights: Vec<ArcSensor> = vec![];
 
@@ -111,7 +127,7 @@ impl Intersection {
     pub fn get_runnables(&self) -> Result<Vec<ArcGroup>, failure::Error> {
         let mut groups: Vec<ArcGroup> = vec![];
 
-        let highest_scoring = Self::highest_scoring_group(&self.groups());
+        let highest_scoring = Self::highest_scoring_group(&self.unblocked_groups());
 
         if highest_scoring.read().unwrap().score == 0 {
             return Ok(groups);
