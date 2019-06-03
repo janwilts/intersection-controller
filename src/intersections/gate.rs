@@ -29,8 +29,8 @@ impl Default for GateState {
 impl Display for GateState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            GateState::Open => write!(f, "{}", "OPEN"),
-            GateState::Close => write!(f, "{}", "CLOSE"),
+            GateState::Open => write!(f, "OPEN"),
+            GateState::Close => write!(f, "CLOSE"),
         }
     }
 }

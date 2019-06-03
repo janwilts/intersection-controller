@@ -8,10 +8,11 @@ use std::time::Duration;
 use crossbeam_channel::{after, Receiver};
 
 use crate::config::groups::{Group as ConfigGroup, Groups as ConfigGroups};
-use crate::intersections::component::Component;
+use crate::intersections::component::{Component, ComponentKind, ComponentUid};
 use crate::intersections::group::{ArcGroup, GroupKind};
 use crate::intersections::intersection::ArcIntersection;
 use crate::intersections::light::LightState;
+use crate::intersections::sensor::SensorState;
 
 pub struct TrafficLightsRunner {
     intersection: ArcIntersection,
@@ -36,8 +37,21 @@ impl TrafficLightsRunner {
         }
     }
 
-    pub fn run(&self) {
+    pub fn run(&self) -> Result<(), failure::Error> {
+        info!("Running traffic lights");
+
         let state_receiver = self.intersection.read().unwrap().state_receiver.clone();
+        let jam_sensor = self
+            .intersection
+            .read()
+            .unwrap()
+            .find_sensor(ComponentUid::new(
+                GroupKind::MotorVehicle,
+                14,
+                ComponentKind::Sensor,
+                1,
+            ))
+            .unwrap();
 
         loop {
             select! {
@@ -50,31 +64,76 @@ impl TrafficLightsRunner {
                 break;
             }
 
+            if jam_sensor
+                .read()
+                .unwrap()
+                .triggered_for(Duration::from_secs(3), SensorState::High)
+            {
+                warn!("A wild traffic jam appeared, blocking other traffic.");
+
+                for group in self.intersection.read().unwrap().blockable_groups() {
+                    group.write().unwrap().block = true;
+                }
+            } else {
+                for group in self.intersection.read().unwrap().blockable_groups() {
+                    group.write().unwrap().block = false;
+                }
+            }
+
             let runnables = self.intersection.read().unwrap().get_runnables().unwrap();
 
             if runnables.is_empty() {
                 continue;
             }
 
+            info!("Starting a traffic lights phase");
+
             let by_kind = self.runnables_by_group_kind(runnables);
-            let all_times = self.get_times(by_kind.keys().map(|k| k.clone()).collect());
+            let all_times = self.get_times(by_kind.keys().cloned().collect());
 
             let mut handles = vec![];
 
             for (kind, runnables) in by_kind {
-                let times = all_times.get(&kind).unwrap().clone();
+                let times = all_times[&kind].clone();
 
                 let stop = Arc::clone(&self.stop);
                 let stop_channel = self.stop_channel.clone();
 
                 handles.push(thread::spawn(move || {
+                    info!("Phase {} for kind {}", LightState::Proceed, kind);
+
                     for group in runnables.clone() {
                         for light in group.read().unwrap().lights.values() {
-                            light.write().unwrap().set_state(LightState::Proceed);
+                            light
+                                .write()
+                                .unwrap()
+                                .set_state(LightState::Proceed)
+                                .unwrap_or_else(|e| error!("{}", e));
                         }
                     }
                     select! {
-                        recv(after(times.get(&LightState::Proceed).unwrap().clone())) -> _ => {},
+                        recv(after(times[&LightState::Proceed])) -> _ => {},
+                        recv(stop_channel) -> _ => {},
+                    };
+
+                    if stop.load(Acquire) {
+                        return;
+                    }
+
+                    info!("Phase {} for kind {}", LightState::Transitioning, kind);
+
+                    for group in runnables.clone() {
+                        for light in group.read().unwrap().lights.values() {
+                            light
+                                .write()
+                                .unwrap()
+                                .set_state(LightState::Transitioning)
+                                .unwrap_or_else(|e| error!("{}", e));
+                        }
+                    }
+
+                    select! {
+                        recv(after(times[&LightState::Transitioning])) -> _ => {},
                         recv(stop_channel) -> _ => {},
                     };
 
@@ -84,25 +143,18 @@ impl TrafficLightsRunner {
 
                     for group in runnables.clone() {
                         for light in group.read().unwrap().lights.values() {
-                            light.write().unwrap().set_state(LightState::Transitioning);
-                        }
-                    }
-
-                    select! {
-                        recv(after(times.get(&LightState::Transitioning).unwrap().clone())) -> _ => {},
-                        recv(stop_channel) -> _ => {},
-                    };
-
-                    if stop.load(Acquire) {
-                        return;
-                    }
-
-                    for group in runnables.clone() {
-                        for light in group.read().unwrap().lights.values() {
-                            light.write().unwrap().set_state(LightState::Prohibit);
+                            light
+                                .write()
+                                .unwrap()
+                                .set_state(LightState::Prohibit)
+                                .unwrap_or_else(|e| error!("{}", e));
                         }
 
-                        group.write().unwrap().reset_score();
+                        group
+                            .write()
+                            .unwrap()
+                            .reset_score()
+                            .unwrap_or_else(|e| error!("{}", e));
                     }
                 }));
             }
@@ -126,6 +178,8 @@ impl TrafficLightsRunner {
         }
 
         warn!("Stopping traffic lights runner");
+
+        Ok(())
     }
 
     fn runnables_by_group_kind(
@@ -158,7 +212,7 @@ impl TrafficLightsRunner {
         for kind in kinds {
             let config = self.group_config(kind);
 
-            if let None = config {
+            if config.is_none() {
                 continue;
             }
 

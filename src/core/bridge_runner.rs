@@ -32,37 +32,44 @@ impl BridgeRunner {
         }
     }
 
-    pub fn run(&self) {
+    pub fn run(&self) -> Result<(), failure::Error> {
+        info!("Running bridge");
+
         let above_deck_sensor = self
             .intersection
             .read()
             .unwrap()
             .find_sensor(Uid::new(GroupKind::Bridge, 1, ComponentKind::Sensor, 1))
             .unwrap();
+
         let below_deck_sensor = self
             .intersection
             .read()
             .unwrap()
             .find_sensor(Uid::new(GroupKind::Vessel, 3, ComponentKind::Sensor, 1))
             .unwrap();
+
         let light = self
             .intersection
             .read()
             .unwrap()
             .find_light(Uid::new(GroupKind::Bridge, 1, ComponentKind::Light, 1))
             .unwrap();
+
         let front_gate = self
             .intersection
             .read()
             .unwrap()
             .find_gate(Uid::new(GroupKind::Bridge, 1, ComponentKind::Gate, 1))
             .unwrap();
+
         let back_gate = self
             .intersection
             .read()
             .unwrap()
             .find_gate(Uid::new(GroupKind::Bridge, 1, ComponentKind::Gate, 2))
             .unwrap();
+
         let deck = self
             .intersection
             .read()
@@ -108,7 +115,10 @@ impl BridgeRunner {
                 continue;
             }
 
-            light.write().unwrap().set_state(LightState::Transitioning);
+            light
+                .write()
+                .unwrap()
+                .set_state(LightState::Transitioning)?;
 
             select! {
                 recv(after(Duration::from_secs(4))) -> _ => {},
@@ -118,7 +128,7 @@ impl BridgeRunner {
                 break;
             }
 
-            light.write().unwrap().set_state(LightState::Prohibit);
+            light.write().unwrap().set_state(LightState::Prohibit)?;
 
             select! {
                 recv(after(Duration::from_secs(6))) -> _ => {},
@@ -141,8 +151,8 @@ impl BridgeRunner {
                 }
             }
 
-            front_gate.write().unwrap().set_state(GateState::Close);
-            back_gate.write().unwrap().set_state(GateState::Close);
+            front_gate.write().unwrap().set_state(GateState::Close)?;
+            back_gate.write().unwrap().set_state(GateState::Close)?;
 
             select! {
                 recv(after(Duration::from_secs(4))) -> _ => {},
@@ -152,7 +162,7 @@ impl BridgeRunner {
                 break;
             }
 
-            deck.write().unwrap().set_state(DeckState::Open);
+            deck.write().unwrap().set_state(DeckState::Open)?;
 
             select! {
                 recv(after(Duration::from_secs(10))) -> _ => {},
@@ -162,14 +172,14 @@ impl BridgeRunner {
                 break;
             }
 
-            while self.one_vessel_high() {
+            while self.one_vessel_high() && !self.stop.load(Acquire) {
                 for vessel in self.main_vessels() {
                     if !vessel.read().unwrap().one_sensor_high() {
                         continue;
                     }
 
                     for light in vessel.read().unwrap().lights.values() {
-                        light.write().unwrap().set_state(LightState::Proceed);
+                        light.write().unwrap().set_state(LightState::Proceed)?;
                     }
 
                     let channel = below_deck_sensor.read().unwrap().receiver.clone();
@@ -180,7 +190,7 @@ impl BridgeRunner {
                             recv(self.stop_channel) -> _ => {},
                         };
                         if self.stop.load(Acquire) {
-                            return;
+                            break;
                         }
                     }
 
@@ -190,17 +200,17 @@ impl BridgeRunner {
                             recv(self.stop_channel) -> _ => {},
                         };
                         if self.stop.load(Acquire) {
-                            return;
+                            break;
                         }
                     }
 
                     for light in vessel.read().unwrap().lights.values() {
-                        light.write().unwrap().set_state(LightState::Prohibit);
+                        light.write().unwrap().set_state(LightState::Prohibit)?;
                     }
                 }
             }
 
-            deck.write().unwrap().set_state(DeckState::Close);
+            deck.write().unwrap().set_state(DeckState::Close)?;
 
             select! {
                 recv(after(Duration::from_secs(10))) -> _ => {},
@@ -210,8 +220,8 @@ impl BridgeRunner {
                 break;
             }
 
-            front_gate.write().unwrap().set_state(GateState::Open);
-            back_gate.write().unwrap().set_state(GateState::Open);
+            front_gate.write().unwrap().set_state(GateState::Open)?;
+            back_gate.write().unwrap().set_state(GateState::Open)?;
 
             select! {
                 recv(after(Duration::from_secs(4))) -> _ => {},
@@ -221,18 +231,46 @@ impl BridgeRunner {
                 break;
             }
 
-            light.write().unwrap().set_state(LightState::Proceed);
+            light.write().unwrap().set_state(LightState::Proceed)?;
+
+            let deck_channel = above_deck_sensor.read().unwrap().receiver.clone();
+            let mut cars = false;
 
             select! {
                 recv(after(Duration::from_secs(30))) -> _ => {},
+                recv(deck_channel) -> _ => cars = true,
                 recv(self.stop_channel) -> _ => {},
             };
             if self.stop.load(Acquire) {
                 break;
             }
+
+            if cars {
+                while above_deck_sensor.read().unwrap().state() == SensorState::Low {
+                    select! {
+                        recv(deck_channel) -> _ => {},
+                        recv(self.stop_channel) -> _ => {},
+                    }
+                    if self.stop.load(Acquire) {
+                        break;
+                    }
+                }
+
+                while above_deck_sensor.read().unwrap().state() == SensorState::High {
+                    select! {
+                        recv(deck_channel) -> _ => {},
+                        recv(self.stop_channel) -> _ => {},
+                    }
+                    if self.stop.load(Acquire) {
+                        break;
+                    }
+                }
+            }
         }
 
         warn!("Stopping bridge runner");
+
+        Ok(())
     }
 
     fn one_vessel_high(&self) -> bool {

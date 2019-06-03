@@ -572,3 +572,12 @@ id = 12
   kind = "sensor"
   id = 1
   distance = 0
+
+[[groups]]
+kind = "motor_vehicle"
+id = 14
+
+  [[groups.components]]
+  kind = "sensor"
+  id = 1
+  distance = 0

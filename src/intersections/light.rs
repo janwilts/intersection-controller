@@ -36,7 +36,7 @@ impl Display for LightState {
             LightState::Prohibit => write!(f, "{}", "PROHIBIT".color(Color::Red)),
             LightState::Transitioning => write!(f, "{}", "TRANSITIONING".color(Color::Yellow)),
             LightState::Proceed => write!(f, "{}", "PROCEED".color(Color::Green)),
-            LightState::OutOfOrder => write!(f, "{}", "OUT_OF_ORDER"),
+            LightState::OutOfOrder => write!(f, "OUT_OF_ORDER"),
         }
     }
 }

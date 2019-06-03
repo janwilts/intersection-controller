@@ -188,13 +188,17 @@ impl Group {
         Some(Arc::clone(self.decks.get(&id)?))
     }
 
-    pub fn set_score(&mut self, score: i32) {
+    pub fn set_score(&mut self, score: i32) -> Result<(), failure::Error> {
         self.score = score;
-        self.intersection.read().unwrap().send_score(self.id);
+        self.intersection.read().unwrap().send_score(self.id)?;
+
+        Ok(())
     }
 
-    pub fn reset_score(&mut self) {
-        self.set_score(0);
+    pub fn reset_score(&mut self) -> Result<(), failure::Error> {
+        self.set_score(0)?;
+
+        Ok(())
     }
 
     pub fn one_sensor_high(&self) -> bool {
@@ -217,40 +221,43 @@ impl Group {
         false
     }
 
-    pub fn reset_all(&self) {
+    pub fn reset_all(&self) -> Result<(), failure::Error> {
         for s in self.sensors.values() {
-            s.write().unwrap().reset();
+            s.write().unwrap().reset()?;
         }
 
         for l in self.lights.values() {
-            l.write().unwrap().reset();
+            l.write().unwrap().reset()?;
         }
 
         for d in self.decks.values() {
-            d.write().unwrap().reset();
+            d.write().unwrap().reset()?;
         }
 
         for g in self.gates.values() {
-            g.write().unwrap().reset();
+            g.write().unwrap().reset()?;
         }
+
+        Ok(())
     }
 
-    pub fn send(&self, uid: ComponentUid) {
-        self.intersection.read().unwrap().send_state(uid);
+    pub fn send(&self, uid: ComponentUid) -> Result<(), failure::Error> {
+        self.intersection.read().unwrap().send_state(uid)?;
 
         match uid.component_id.kind {
             ComponentKind::Sensor => self.sensor_sender.send(uid),
             ComponentKind::Light => self.light_sender.send(uid),
             ComponentKind::Gate => self.gate_sender.send(uid),
             ComponentKind::Deck => self.deck_sender.send(uid),
-        }
-        .expect("Could not send component notification");
+        }?;
+
+        Ok(())
     }
 
-    pub fn send_actuator(&self, uid: ComponentUid) {
-        self.send(uid);
-        self.actuator_sender
-            .send(uid)
-            .expect("Could not send actuator notification");
+    pub fn send_actuator(&self, uid: ComponentUid) -> Result<(), failure::Error> {
+        self.send(uid)?;
+        self.actuator_sender.send(uid)?;
+
+        Ok(())
     }
 }

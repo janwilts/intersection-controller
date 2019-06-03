@@ -4,7 +4,6 @@ use std::sync::atomic::Ordering::Release;
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
-use std::time::Duration;
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 
@@ -15,8 +14,7 @@ use crate::core::message_subscriber::MessageSubscriber;
 use crate::core::score_poller::ScorePoller;
 use crate::core::state_publisher::StatePublisher;
 use crate::core::traffic_lights_runner::TrafficLightsRunner;
-use crate::intersections::component::{Component, ComponentId, ComponentKind};
-use crate::intersections::group::{ArcGroup, GroupId, GroupKind};
+use crate::intersections::component::Component;
 use crate::intersections::intersection::{ArcIntersection, Notification};
 use crate::intersections::sensor::SensorState;
 use crate::io::client::Client;
@@ -121,37 +119,29 @@ impl Controller {
 
         debug!("Subscribing to sensor topics");
         for sensor in self.traffic_lights.read().unwrap().sensors() {
-            subscriber
-                .subscribe(Box::new(ComponentTopic::from(sensor.read().unwrap().uid())))
-                .expect("Could not subscribe");
+            subscriber.subscribe(Box::new(ComponentTopic::from(sensor.read().unwrap().uid())))?;
         }
 
         for sensor in self.bridge.read().unwrap().sensors() {
-            subscriber
-                .subscribe(Box::new(ComponentTopic::from(sensor.read().unwrap().uid())))
-                .expect("Could not subscribe");
+            subscriber.subscribe(Box::new(ComponentTopic::from(sensor.read().unwrap().uid())))?;
         }
 
         debug!("Subscribing to lifecycle topics");
-        subscriber
-            .subscribe(Box::new(LifeCycleTopic::new(
-                Device::Simulator,
-                Handler::Connect,
-            )))
-            .expect("Could not subscribe");
+        subscriber.subscribe(Box::new(LifeCycleTopic::new(
+            Device::Simulator,
+            Handler::Connect,
+        )))?;
 
-        subscriber
-            .subscribe(Box::new(LifeCycleTopic::new(
-                Device::Simulator,
-                Handler::Disconnect,
-            )))
-            .expect("Could not subscribe");
+        subscriber.subscribe(Box::new(LifeCycleTopic::new(
+            Device::Simulator,
+            Handler::Disconnect,
+        )))?;
 
         // Publisher
         let publisher_receiver = self.publisher_receiver.clone();
         self.message_publisher_handle = Some(thread::spawn(move || {
             let publisher = MessagePublisher::new(publisher, publisher_receiver);
-            publisher.run();
+            publisher.run().unwrap_or_else(|e| error!("{}", e));;
         }));
 
         // Subscriber
@@ -163,136 +153,120 @@ impl Controller {
 
         let state_publisher = Arc::clone(&self.state_publisher);
         self.state_publisher_handle = Some(thread::spawn(move || {
-            state_publisher
-                .run()
-                .expect("Something went wrong in the state publisher.");
+            state_publisher.run().unwrap_or_else(|e| error!("{}", e));
         }));
 
         // Score Poller
         let score_poller = Arc::clone(&self.score_poller);
         self.score_poller_handle = Some(thread::spawn(move || {
-            score_poller.run();
+            score_poller.run().unwrap_or_else(|e| error!("{}", e));;
         }));
 
         let receiver = self.subscriber_receiver.clone();
 
         for message in receiver {
             if let Ok(topic) = LifeCycleTopic::try_from(&message.0[..]) {
-                self.handle_life_cycle_message(topic);
+                self.handle_life_cycle_message(topic).unwrap_or_else(|_| {
+                    error!("Could not properly handle lifecycle message, skipping.")
+                });;
             }
 
             if let Ok(topic) = ComponentTopic::try_from(&message.0[..]) {
-                self.handle_component_message(topic, message.1);
+                self.handle_component_message(topic, message.1)
+                    .unwrap_or_else(|_| {
+                        error!("Could not properly handle component message, skipping.")
+                    });
             }
         }
 
         Ok(())
     }
 
-    fn handle_life_cycle_message(&mut self, topic: LifeCycleTopic) {
+    fn handle_life_cycle_message(&mut self, topic: LifeCycleTopic) -> Result<(), failure::Error> {
         info!("Received a lifecycle topic");
 
         if topic.device == Device::Simulator && topic.handler == Handler::Connect {
             info!("Received a connect");
 
-            self.stop_runners();
-            self.reset();
+            self.stop_runners()?;
+            self.reset()?;
 
             info!("Starting traffic light and bridge threads");
             let traffic_lights_runner = Arc::clone(&self.traffic_lights_runner);
             self.traffic_lights_runner_handle = Some(thread::spawn(move || {
-                traffic_lights_runner.run();
+                traffic_lights_runner
+                    .run()
+                    .unwrap_or_else(|e| error!("{}", e));
             }));
 
             let bridge_runner = Arc::clone(&self.bridge_runner);
             self.bridge_runner_handle = Some(thread::spawn(move || {
-                bridge_runner.run();
+                bridge_runner.run().unwrap_or_else(|e| error!("{}", e));
             }));
         } else if topic.device == Device::Simulator && topic.handler == Handler::Disconnect {
             warn!("Received a disconnect");
 
-            self.stop_runners();
-            self.reset();
+            self.stop_runners()?;
+            self.reset()?;
         }
+
+        Ok(())
     }
 
-    fn handle_component_message(&self, topic: ComponentTopic, payload: String) {
-        let payload_int = payload.parse::<i32>().unwrap();
-        let state = SensorState::try_from(payload_int).unwrap();
+    fn handle_component_message(
+        &self,
+        topic: ComponentTopic,
+        payload: String,
+    ) -> Result<(), failure::Error> {
+        let payload_int = payload.parse::<i32>()?;
+        let state = SensorState::try_from(payload_int)?;
 
         if let Some(sensor) = self.traffic_lights.read().unwrap().find_sensor(topic.uid) {
-            sensor.write().unwrap().set_state(state);
-
-            if sensor.read().unwrap().group().read().unwrap().id
-                == (GroupId {
-                    kind: GroupKind::MotorVehicle,
-                    id: 14,
-                })
-            {
-                self.handle_jam_sensor(Arc::clone(&sensor.read().unwrap().group()));
-            }
+            sensor.write().unwrap().set_state(state)?;
         }
 
         if let Some(sensor) = self.bridge.read().unwrap().find_sensor(topic.uid) {
-            sensor.write().unwrap().set_state(state);
+            sensor.write().unwrap().set_state(state)?;
         }
+
+        Ok(())
     }
 
-    fn handle_jam_sensor(&self, group: ArcGroup) {
-        let sensor = group
-            .read()
-            .unwrap()
-            .find_sensor(ComponentId {
-                kind: ComponentKind::Sensor,
-                id: 1,
-            })
-            .unwrap();
-
-        if sensor.read().unwrap().triggered_for(Duration::from_secs(5)) {
-            warn!("Bridge queue too full! Blocking traffic lights");
-
-            for blockable in self.traffic_lights.read().unwrap().blockable_groups() {
-                blockable.write().unwrap().block = true;
-            }
-        } else {
-            for blockable in self.traffic_lights.read().unwrap().blockable_groups() {
-                blockable.write().unwrap().block = false;
-            }
-        }
-    }
-
-    fn reset(&self) {
+    fn reset(&self) -> Result<(), failure::Error> {
         info!("Resetting all states and scores");
         for group in self.traffic_lights.read().unwrap().groups.values() {
-            group.read().unwrap().reset_all();
-            group.write().unwrap().reset_score();
+            group.read().unwrap().reset_all()?;
+            group.write().unwrap().reset_score()?;
         }
 
         for group in self.bridge.read().unwrap().groups.values() {
-            group.read().unwrap().reset_all();
-            group.write().unwrap().reset_score();
+            group.read().unwrap().reset_all()?;
+            group.write().unwrap().reset_score()?;
         }
+
+        Ok(())
     }
 
-    fn stop_runners(&mut self) {
+    fn stop_runners(&mut self) -> Result<(), failure::Error> {
         if self.traffic_lights_runner_handle.is_some() && self.bridge_runner_handle.is_some() {
             self.stop_runners.store(true, Release);
-            self.stop_runners_sender
-                .send(())
-                .expect("Could not send stop notification");
+            self.stop_runners_sender.send(())?;
 
             self.traffic_lights_runner_handle
                 .take()
                 .unwrap()
                 .join()
-                .expect("Could not join traffic lights thread");
+                .unwrap_or_else(|_| error!("Could not join traffic lights thread"));
+
             self.bridge_runner_handle
                 .take()
                 .unwrap()
                 .join()
-                .expect("Could not join traffic bridge thread");
+                .unwrap_or_else(|_| error!("Could not join traffic lights thread"));
 
             self.stop_runners.store(false, Release);
         }
+
+        Ok(())
     }
 }

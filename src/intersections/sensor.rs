@@ -93,7 +93,7 @@ impl Sensor {
         Self {
             group,
             id,
-            state: initial_state.clone(),
+            state: initial_state,
             initial_state,
             timestamp: Utc::now(),
             sender,
@@ -117,7 +117,7 @@ impl Component<SensorState> for Sensor {
     }
 
     fn state(&self) -> SensorState {
-        self.state.clone()
+        self.state
     }
 
     fn initial_state(&self) -> SensorState {
@@ -130,7 +130,7 @@ impl Component<SensorState> for Sensor {
     }
 
     fn timestamp(&self) -> DateTime<Utc> {
-        self.timestamp.clone()
+        self.timestamp
     }
 
     fn id(&self) -> ComponentId {

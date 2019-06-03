@@ -14,7 +14,7 @@ impl ScorePoller {
         Self { traffic_lights }
     }
 
-    pub fn run(&self) {
+    pub fn run(&self) -> Result<(), failure::Error> {
         loop {
             for group in self.traffic_lights.read().unwrap().groups() {
                 let mut score = group.read().unwrap().score;
@@ -26,14 +26,16 @@ impl ScorePoller {
                         continue;
                     }
 
-                    if sensor.distance > 0 && sensor.triggered_for(Duration::from_secs(3)) {
+                    if sensor.distance > 0
+                        && sensor.triggered_for(Duration::from_secs(3), SensorState::High)
+                    {
                         score += sensor.distance;
                     } else {
                         score += 1;
                     }
                 }
 
-                group.write().unwrap().set_score(score);
+                group.write().unwrap().set_score(score)?;
             }
 
             thread::sleep(Duration::from_millis(100));

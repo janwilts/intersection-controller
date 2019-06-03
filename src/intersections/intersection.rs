@@ -110,7 +110,7 @@ impl Intersection {
         Some(Arc::clone(&deck))
     }
 
-    fn highest_scoring_group(groups: &Vec<ArcGroup>) -> ArcGroup {
+    fn highest_scoring_group(groups: &[ArcGroup]) -> ArcGroup {
         let mut score = -1;
         let mut highest = Arc::clone(groups.first().unwrap());
 
@@ -134,7 +134,7 @@ impl Intersection {
         }
 
         for group in &highest_scoring.read().unwrap().concurrences {
-            if group.read().unwrap().score <= 0 {
+            if group.read().unwrap().score <= 0 || group.read().unwrap().block {
                 continue;
             }
 
@@ -158,21 +158,19 @@ impl Intersection {
         Ok(groups)
     }
 
-    pub fn send_state(&self, id: ComponentUid) {
-        self.state_sender
-            .send(id)
-            .expect("Could not send state notification");
+    pub fn send_state(&self, id: ComponentUid) -> Result<(), failure::Error> {
+        self.state_sender.send(id)?;
         self.notification_sender
-            .send(Notification::StateUpdated(id))
-            .expect("Could not send state notification");
+            .send(Notification::StateUpdated(id))?;
+
+        Ok(())
     }
 
-    pub fn send_score(&self, id: GroupId) {
-        self.score_sender
-            .send(id)
-            .expect("Could not send score notification");
+    pub fn send_score(&self, id: GroupId) -> Result<(), failure::Error> {
+        self.score_sender.send(id)?;
         self.notification_sender
-            .send(Notification::ScoreUpdated(id))
-            .expect("Could not send score notification");
+            .send(Notification::ScoreUpdated(id))?;
+
+        Ok(())
     }
 }

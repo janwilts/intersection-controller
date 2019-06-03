@@ -31,9 +31,13 @@ mod core;
 mod intersections;
 mod io;
 
-fn main() {
+fn main() -> Result<(), failure::Error> {
     // Set up logging.
-    set_up_logger().expect("Could not set up logging");
+    set_up_logger()?;
+
+    std::panic::set_hook(Box::new(|info| {
+        println!("{}", info);
+    }));
 
     let config = Config::new("config").expect("Could not read config");
 
@@ -42,13 +46,11 @@ fn main() {
     let traffic_lights = IntersectionsBuilder::new(notification_sender.clone())
         .with_defs(&config.traffic_lights)
         .with_blocks(&config.traffic_lights_blocks)
-        .finish()
-        .expect("Could not construct traffic lights");
+        .finish()?;
 
     let bridge = IntersectionsBuilder::new(notification_sender.clone())
         .with_defs(&config.bridge)
-        .finish()
-        .expect("Could not construct bridge");
+        .finish()?;
 
     let mut publisher = ClientBuilder::new(
         &config.io.publisher,
@@ -72,9 +74,9 @@ fn main() {
     .unwrap();
 
     let mut controller = Controller::new(traffic_lights, bridge, notification_receiver, config);
-    controller
-        .start(publisher, subscriber)
-        .expect("Something went wrong");
+    controller.start(publisher, subscriber)?;
+
+    Ok(())
 }
 
 fn set_up_logger() -> Result<(), failure::Error> {

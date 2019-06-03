@@ -73,7 +73,7 @@ where
     }
 
     fn timestamp(&self) -> DateTime<Utc> {
-        self.timestamp.clone()
+        self.timestamp
     }
 
     fn id(&self) -> ComponentId {

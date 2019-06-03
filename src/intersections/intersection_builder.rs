@@ -174,7 +174,7 @@ impl<'a> IntersectionsBuilder<'a> {
         &self,
         intersection: ArcIntersection,
     ) -> Result<ArcIntersection, failure::Error> {
-        if let None = self.blocks {
+        if self.blocks.is_none() {
             return Ok(intersection);
         }
 

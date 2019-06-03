@@ -29,8 +29,8 @@ impl Default for DeckState {
 impl Display for DeckState {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            DeckState::Open => write!(f, "{}", "OPEN"),
-            DeckState::Close => write!(f, "{}", "CLOSE"),
+            DeckState::Open => write!(f, "OPEN"),
+            DeckState::Close => write!(f, "CLOSE"),
         }
     }
 }

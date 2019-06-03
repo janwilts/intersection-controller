@@ -119,7 +119,10 @@ impl Debug for ComponentUid {
     }
 }
 
-pub trait ComponentState: Clone + Copy + Default + Display + Into<i32> + TryFrom<i32> {}
+pub trait ComponentState:
+    Clone + Copy + Default + Display + PartialEq + Into<i32> + TryFrom<i32>
+{
+}
 
 pub trait Component<S>: Send
 where
@@ -137,17 +140,14 @@ where
 
     fn id(&self) -> ComponentId;
 
-    fn set_state(&mut self, state: S) {
-        info!("Setting state on {:?} to {}", self.uid(), state);
+    fn set_state(&mut self, state: S) -> Result<(), failure::Error> {
+        debug!("Setting state on {:?} to {}", self.uid(), state);
 
         self.set_state_internal(state);
+        self.sender().send(self.uid())?;
+        self.group().read().unwrap().send_actuator(self.uid())?;
 
-        let uid = self.uid();
-
-        self.sender()
-            .send(uid)
-            .expect("Could not send state notification");
-        self.group().read().unwrap().send_actuator(uid);
+        Ok(())
     }
 
     fn uid(&self) -> ComponentUid {
@@ -159,11 +159,13 @@ where
         }
     }
 
-    fn reset(&mut self) {
-        self.set_state(self.initial_state());
+    fn reset(&mut self) -> Result<(), failure::Error> {
+        self.set_state(self.initial_state())?;
+
+        Ok(())
     }
 
-    fn triggered_for(&self, duration: Duration) -> bool {
-        (Utc::now() - self.timestamp()).to_std().unwrap() >= duration
+    fn triggered_for(&self, duration: Duration, state: S) -> bool {
+        self.state() == state && (Utc::now() - self.timestamp()).to_std().unwrap() >= duration
     }
 }

@@ -47,7 +47,7 @@ impl StatePublisher {
                         topic: Box::new(ComponentTopic::from(id)),
                         payload: self.get_payload(id)?.to_string().into_bytes(),
                     })
-                    .expect("Could not send state notification");
+                    .unwrap_or_else(|e| error!("{}", e));
             }
         }
 

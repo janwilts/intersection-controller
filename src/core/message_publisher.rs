@@ -21,11 +21,11 @@ impl MessagePublisher {
         }
     }
 
-    pub fn run(mut self) {
+    pub fn run(mut self) -> Result<(), failure::Error> {
         for message in &self.receiver {
-            self.publisher
-                .publish(message.topic, message.payload)
-                .expect("Could not send publish message");
+            self.publisher.publish(message.topic, message.payload)?;
         }
+
+        Ok(())
     }
 }
